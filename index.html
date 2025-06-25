@@ -1,250 +1,653 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Calculadora Interna Presupuesto Edición Video</title>
 
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Calculadora de Presupuesto de Video</title>
-</head>
-<body style="font-family:sans-serif;padding:2rem;">
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Calculadora de Presupuesto de Video</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      padding: 2rem;
-      background-color: #f9fafb;
-      color: #111827;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    th, td {
-      padding: 8px;
-      border: 1px solid #d1d5db;
-    }
-    th {
-      background-color: #e5e7eb;
-    }
-    button {
-      padding: 0.5rem 1rem;
-      font-size: 1rem;
-      border: none;
-      border-radius: 8px;
-      color: white;
-      cursor: pointer;
-    }
-  </style>
+<!-- jsPDF CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 2rem;
+    background: #f9fafb;
+    color: #111827;
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  h1, h2 {
+    color: #1f2937;
+    text-align: center;
+  }
+  form {
+    background: white;
+    padding: 1.5rem 2rem;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgb(0 0 0 / 0.1);
+    margin-bottom: 2rem;
+  }
+  label {
+    font-weight: 600;
+    display: block;
+    margin-top: 1rem;
+    margin-bottom: 0.3rem;
+    color: #374151;
+  }
+  input[type="text"], input[type="number"], input[type="date"], select, textarea {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #d1d5db;
+    border-radius: 5px;
+    font-size: 1rem;
+    color: #111827;
+    resize: vertical;
+  }
+  textarea {
+    min-height: 60px;
+  }
+  input[type="checkbox"] {
+    margin-right: 0.5rem;
+  }
+  button {
+    background-color: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 0.7rem 1.4rem;
+    font-size: 1rem;
+    cursor: pointer;
+    margin-top: 1.5rem;
+    transition: background-color 0.3s ease;
+  }
+  button:hover {
+    background-color: #1d4ed8;
+  }
+  #resultado, #error {
+    background: #e0f2fe;
+    border-left: 4px solid #0284c7;
+    padding: 1rem;
+    margin-top: 1.5rem;
+    border-radius: 6px;
+    font-weight: 600;
+  }
+  #error {
+    background: #fee2e2;
+    border-left-color: #dc2626;
+    font-weight: 700;
+    color: #991b1b;
+  }
+  #historialContainer {
+    margin-top: 2rem;
+    background: white;
+    border-radius: 8px;
+    padding: 1rem 1.5rem;
+    box-shadow: 0 0 10px rgb(0 0 0 / 0.1);
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+  }
+  th, td {
+    border: 1px solid #d1d5db;
+    padding: 0.5rem 0.7rem;
+    text-align: center;
+    font-size: 0.9rem;
+  }
+  th {
+    background: #e5e7eb;
+  }
+  #historialContainer table {
+    max-height: 300px;
+    overflow-y: auto;
+    display: block;
+  }
+  #logoPlaceholder {
+    width: 120px;
+    height: 50px;
+    background: #ddd;
+    display: block;
+    margin-bottom: 1rem;
+    text-align: center;
+    line-height: 50px;
+    color: #888;
+    font-weight: bold;
+    user-select: none;
+  }
+</style>
+
 </head>
 <body>
 
-<h1>📽️ Calculadora de Presupuestos de Edición de Video</h1>
+<h1>🛠️ Calculadora Interna de Presupuesto de Edición de Video</h1>
+<p style="text-align:center; max-width:700px; margin:auto; margin-bottom:2rem; color:#6b7280;">
+Completa los datos para estimar horas y precio justo. Generá PDF para cliente con info resumida y tu logo.
+</p>
 
-<!-- BOTÓN Y TABLA DE HISTORIAL -->
-<button id="verHistorial" style="background-color:#4b5563;margin-top:1rem;">📁 Ver Historial Interno</button>
-<div id="historialContainer" style="display:none; margin-top:2rem;">
-  <h2>Historial de Presupuestos (Privado)</h2>
-  <table id="tablaHistorial">
+<form id="presupuestoForm" autocomplete="off">
+
+  <fieldset>
+    <legend><strong>1. Contexto General del Proyecto</strong></legend>
+    <label for="objetivo">Objetivo del video</label>
+    <select id="objetivo" required>
+      <option value="" disabled selected>Selecciona</option>
+      <option value="Promocional">Promocional</option>
+      <option value="Educativo">Educativo</option>
+      <option value="Redes sociales">Redes sociales</option>
+      <option value="Interno">Interno</option>
+      <option value="Otro">Otro</option>
+    </select>
+
+    <label for="publicacion">Lugar de publicación o distribución</label>
+    <input type="text" id="publicacion" placeholder="Ej: YouTube, Instagram..." required>
+
+    <label for="publico">Público objetivo</label>
+    <input type="text" id="publico" placeholder="Ej: Jóvenes, profesionales..." required>
+
+    <label for="referenciaEstilo">Referencia de estilo (URL o descripción)</label>
+    <textarea id="referenciaEstilo" placeholder="Ej: videos dinámicos, minimalistas..."></textarea>
+  </fieldset>
+
+  <fieldset>
+    <legend><strong>2. Material Entregado</strong></legend>
+    <label>¿Material entregado o grabación necesaria?</label>
+    <select id="materialGrabado" required>
+      <option value="" disabled selected>Selecciona</option>
+      <option value="Solo material grabado">Solo material grabado</option>
+      <option value="Necesito que graben">Necesito que graben</option>
+    </select>
+
+    <label for="formatoMaterial">Formato del material</label>
+    <input type="text" id="formatoMaterial" placeholder="Ej: MP4, MOV..." required>
+
+    <label for="resolucionMaterial">Resolución y duración aproximada</label>
+    <input type="text" id="resolucionMaterial" placeholder="Ej: 1080p, 2 horas..." required>
+
+    <label>Organización del material</label>
+    <select id="organizacionMaterial" required>
+      <option value="" disabled selected>Selecciona</option>
+      <option value="Todo organizado">Todo organizado</option>
+      <option value="Hay que limpiar y seleccionar">Hay que limpiar y seleccionar</option>
+    </select>
+  </fieldset>
+
+  <fieldset>
+    <legend><strong>3. Tipo de Edición</strong></legend>
+    <label for="tipoEdicion">Tipo de edición</label>
+    <select id="tipoEdicion" required>
+      <option value="" disabled selected>Selecciona</option>
+      <option value="Rápida para redes">Rápida para redes</option>
+      <option value="Documental">Documental</option>
+      <option value="Corporativa">Corporativa</option>
+      <option value="Emocional">Emocional</option>
+      <option value="Cinematográfica">Cinematográfica</option>
+      <option value="Otro">Otro</option>
+    </select>
+
+    <label>Efectos, transiciones, motion graphics o animación</label>
+    <select id="efectos" required>
+      <option value="" disabled selected>Selecciona</option>
+      <option value="No">No</option>
+      <option value="Efectos simples">Efectos simples</option>
+      <option value="Motion graphics/animación avanzada">Motion graphics/animación avanzada</option>
+    </select>
+
+    <label>Edición multicámara</label>
+    <select id="multicamara" required>
+      <option value="" disabled selected>Selecciona</option>
+      <option value="No">No</option>
+      <option value="Sí">Sí</option>
+    </select>
+  </fieldset>
+
+  <fieldset>
+    <legend><strong>4. Elementos Extra</strong></legend>
+    <label>Subtítulos</label>
+    <select id="subtitulos" required>
+      <option value="" disabled selected>Selecciona</option>
+      <option value="No">No</option>
+      <option value="Automáticos">Automáticos</option>
+      <option value="Personalizados">Personalizados</option>
+    </select>
+
+    <label>Música</label>
+    <select id="musica" required>
+      <option value="" disabled selected>Selecciona</option>
+      <option value="No">No</option>
+      <option value="Proporcionada por cliente">Proporcionada por cliente</option>
+      <option value="Buscar/licenciar">Buscar/licenciar</option>
+    </select>
+
+    <label>Voice-over</label>
+    <select id="voiceOver" required>
+      <option value="" disabled selected>Selecciona</option>
+      <option value="No">No</option>
+      <option value="Tengo la locución">Tengo la locución</option>
+      <option value="Hay que grabarla">Hay que grabarla</option>
+    </select>
+
+    <label>Diseño de miniaturas, carátulas o assets gráficos</label>
+    <select id="assets" required>
+      <option value="" disabled selected>Selecciona</option>
+      <option value="No">No</option>
+      <option value="Sí">Sí</option>
+    </select>
+  </fieldset>
+
+  <fieldset>
+    <legend><strong>5. Duración y Entregables</strong></legend>
+    <label for="duracionFinal">Duración final del video (minutos)</label>
+    <input type="number" id="duracionFinal" min="1" max="600" required>
+
+    <label for="versiones">Cantidad de versiones necesarias</label>
+    <input type="number" id="versiones" min="1" max="10" required>
+
+    <label>¿Necesitas varios cortes del mismo video?</label>
+    <select id="cortes" required>
+      <option value="" disabled selected>Selecciona</option>
+      <option value="No">No</option>
+      <option value="Sí">Sí</option>
+    </select>
+
+    <label for="formatoEntrega">Formato o resolución de entrega</label>
+    <input type="text" id="formatoEntrega" placeholder="Ej: MP4 1080p" required>
+  </fieldset>
+
+  <fieldset>
+    <legend><strong>6. Tiempos</strong></legend>
+    <label for="fechaEntrega">Fecha de entrega deseada</label>
+    <input type="date" id="fechaEntrega" required>
+
+    <label for="revisiones">Cantidad de rondas de revisiones</label>
+    <input type="number" id="revisiones" min="0" max="10" value="1" required>
+
+    <label for="primerVersion">Días para la primera versión</label>
+    <input type="number" id="primerVersion" min="0" max="30" value="3" required>
+  </fieldset>
+
+  <fieldset>
+    <legend><strong>7. Presupuesto y Forma de Pago</strong></legend>
+    <label for="presupuestoEstimado">Presupuesto estimado (opcional)</label>
+    <input type="number" id="presupuestoEstimado" min="0" placeholder="Si no, déjalo vacío">
+
+    <label>Facturación por</label>
+    <select id="facturacion" required>
+      <option value="" disabled selected>Selecciona</option>
+      <option value="Proyecto">Proyecto</option>
+      <option value="Hora">Hora</option>
+      <option value="Minuto final">Minuto final</option>
+      <option value="Mensualidad">Mensualidad</option>
+    </select>
+  </fieldset>
+
+  <fieldset>
+    <legend><strong>🧾 Retención de Cliente (Opcional)</strong></legend>
+    <label for="videosMes">Videos por mes</label>
+    <input type="number" id="videosMes" min="0" max="100" placeholder="Si solo uno, pon 1">
+
+    <label>¿Buscas trabajo a largo plazo?</label>
+    <select id="trabajoLargoPlazo" required>
+      <option value="" disabled selected>Selecciona</option>
+      <option value="No">No</option>
+      <option value="Sí">Sí</option>
+    </select>
+  </fieldset>
+
+  <button type="submit">Calcular Presupuesto</button>
+  <button type="button" id="btnGenerarPDF" style="margin-left:1rem;">Generar PDF para Cliente</button>
+
+</form>
+
+<div id="resultado" style="display:none;"></div>
+<div id="error" style="display:none;"></div>
+
+<div id="historialContainer" style="display:none;">
+  <h2>📁 Historial Interno de Presupuestos</h2>
+  <button id="btnVerHistorial">Mostrar/Ocultar Historial</button>
+  <table id="tablaHistorial" style="margin-top:1rem;">
     <thead>
       <tr>
         <th>Fecha</th>
         <th>Tipo</th>
-        <th>Duración</th>
-        <th>Horas</th>
-        <th>Base</th>
+        <th>Duración (min)</th>
+        <th>Horas Estimadas</th>
+        <th>Precio Base</th>
       </tr>
     </thead>
     <tbody></tbody>
   </table>
-
-  <div style="margin-top:2rem;">
-    <h3>📊 Resumen Analítico</h3>
-    <p id="resumenAnalitico"></p>
-    <div id="insightSimbolico" style="margin-top:1rem; padding:1rem; background:#fef3c7; border-left:4px solid #f59e0b; border-radius:8px;">
-      <h4 style="margin-top:0">🌱 Insight del Mentor</h4>
-      <p id="mensajeInsight"></p>
-    </div>
-  </div>
 </div>
 
 <script>
-  const historial = JSON.parse(localStorage.getItem("historialPresupuestos") || "[]");
+  (() => {
+    const { jsPDF } = window.jspdf;
 
-  const insightsSimbolicos = [
-    "¿Este proyecto te conecta con tu propósito o sólo con tu urgencia?",
-    "Recordá: el video no es solo contenido, también es una emoción que viaja.",
-    "¿El cliente está buscando un resultado o una transformación?",
-    "Lo que editás es también un reflejo de lo que estás cultivando en vos mismo.",
-    "A veces, el precio justo es el que también te permite respirar.",
-    "¿Qué nivel de energía vital te pide este proyecto? ¿Estás dispuesto a entregarlo con presencia plena?",
-    "La repetición revela patrones. ¿Qué te está mostrando tu propio historial?",
-    "Editar no es solo cortar. Es construir una narrativa que resuene con el alma del otro."
-  ];
+    // Funciones para cálculo estimado de horas basado en respuestas y dificultad
+    function calcularHoras(formData) {
+      let horasBase = 0;
 
-  document.getElementById("verHistorial").addEventListener("click", function () {
-    const contenedor = document.getElementById("historialContainer");
-    const tabla = document.getElementById("tablaHistorial").querySelector("tbody");
-    const resumen = document.getElementById("resumenAnalitico");
-    const insight = document.getElementById("mensajeInsight");
+      // 1. Tipo de edición - impacto alto en horas
+      switch (formData.tipoEdicion) {
+        case "Rápida para redes": horasBase += 2; break;
+        case "Documental": horasBase += 15; break;
+        case "Corporativa": horasBase += 10; break;
+        case "Emocional": horasBase += 12; break;
+        case "Cinematográfica": horasBase += 20; break;
+        default: horasBase += 8; break;
+      }
 
-    tabla.innerHTML = "";
-    let totalProyectos = historial.length;
-    let totalHoras = 0;
-    let totalBase = 0;
-    let tipos = {};
-    let urgentes = 0;
+      // 2. Material desorganizado agrega tiempo
+      if (formData.organizacionMaterial === "Hay que limpiar y seleccionar") horasBase += 5;
 
-    historial.forEach(item => {
-      totalHoras += parseFloat(item.horas);
-      totalBase += parseFloat(item.base);
-      tipos[item.tipo] = (tipos[item.tipo] || 0) + 1;
-      if (item.urgencia === 'rapido') urgentes++;
+      // 3. Efectos / Motion graphics / Animación
+      switch(formData.efectos) {
+        case "No": horasBase += 0; break;
+        case "Efectos simples": horasBase += 4; break;
+        case "Motion graphics/animación avanzada": horasBase += 12; break;
+      }
 
-      const fila = document.createElement("tr");
-      fila.innerHTML = `
-        <td>${new Date(item.fecha).toLocaleString()}</td>
-        <td>${item.tipo}</td>
-        <td>${item.duracion} min</td>
-        <td>${item.horas}</td>
-        <td>$${item.base}</td>
+      // 4. Edición multicámara
+      if (formData.multicamara === "Sí") horasBase += 6;
+
+      // 5. Subtítulos personalizados
+      if (formData.subtitulos === "Personalizados") horasBase += 3;
+      if (formData.subtitulos === "Automáticos") horasBase += 1;
+
+      // 6. Voice-over a grabar
+      if (formData.voiceOver === "Hay que grabarla") horasBase += 4;
+
+      // 7. Diseño de assets gráficos
+      if (formData.assets === "Sí") horasBase += 3;
+
+      // 8. Cortes adicionales
+      if (formData.cortes === "Sí") horasBase += 3;
+
+      // 9. Duración del video (en minutos)
+      horasBase += formData.duracionFinal * 0.15;
+
+      // 10. Versiones extra (cada versión suma tiempo)
+      horasBase += (formData.versiones - 1) * 1.5;
+
+      // 11. Revisiones (cada ronda suma tiempo)
+      horasBase += formData.revisiones * 1;
+
+      // 12. Días para primera versión (más rápido suele ser más horas por presión)
+      if (formData.primerVersion <= 2) horasBase += 5;
+      else if (formData.primerVersion <= 5) horasBase += 2;
+
+      return horasBase;
+    }
+
+    // Clasificación de dificultad según horas estimadas
+    function clasificarDificultad(horas) {
+      if (horas <= 5) return "Principiante";
+      else if (horas <= 15) return "Intermedio";
+      else return "Avanzado";
+    }
+
+    // Cálculo de precio base (ejemplo simple: tarifa fija x horas)
+    function calcularPrecio(horas, facturacion) {
+      const tarifaHora = 25; // USD o moneda local, ajustar según necesidad
+      switch(facturacion) {
+        case "Hora":
+          return horas * tarifaHora;
+        case "Proyecto":
+          return horas * tarifaHora * 1.2; // tarifa algo mayor para proyecto cerrado
+        case "Minuto final":
+          return horas * tarifaHora * 1.5;
+        case "Mensualidad":
+          return horas * tarifaHora * 20; // ejemplo mensualidad (tarifa por hora * 20)
+        default:
+          return horas * tarifaHora;
+      }
+    }
+
+    // Mostrar resultado en pantalla
+    function mostrarResultado(precio, horas, dificultad) {
+      const div = document.getElementById("resultado");
+      div.style.display = "block";
+      div.innerHTML = `
+        <strong>Estimación para el proyecto:</strong><br>
+        Precio base estimado: <strong>$${precio.toFixed(2)}</strong><br>
+        Horas aproximadas de trabajo: <strong>${horas.toFixed(1)} hrs</strong><br>
+        Nivel de dificultad: <strong>${dificultad}</strong>
       `;
-      tabla.appendChild(fila);
+    }
+
+    // Guardar en historial localStorage
+    function guardarHistorial(entry) {
+      const historial = JSON.parse(localStorage.getItem("historialPresupuestos") || "[]");
+      historial.push(entry);
+      localStorage.setItem("historialPresupuestos", JSON.stringify(historial));
+    }
+
+    // Mostrar historial
+    function mostrarHistorial() {
+      const historial = JSON.parse(localStorage.getItem("historialPresupuestos") || "[]");
+      const tbody = document.querySelector("#tablaHistorial tbody");
+      tbody.innerHTML = "";
+      historial.slice(-20).reverse().forEach(item => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${new Date(item.fecha).toLocaleString()}</td>
+          <td>${item.tipoEdicion}</td>
+          <td>${item.duracionFinal}</td>
+          <td>${item.horas.toFixed(1)}</td>
+          <td>$${item.precio.toFixed(2)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Generar PDF con jsPDF
+    function generarPDF(formData, precio, horas, dificultad) {
+      const doc = new jsPDF();
+      const fechaHoy = new Date();
+      const fechaLimite = new Date(fechaHoy.getTime() + 7 * 24 * 60 * 60 * 1000); // +7 días
+
+      // Logo placeholder
+      doc.setFillColor(220, 220, 220);
+      doc.rect(15, 10, 50, 20, "F");
+      doc.setFontSize(14);
+      doc.setTextColor(100);
+      doc.text("LOGO AQUÍ", 40, 23, { align: "center" });
+
+      doc.setFontSize(22);
+      doc.setTextColor(33, 37, 41);
+      doc.text("Presupuesto de Edición de Video", 105, 45, { align: "center" });
+
+      doc.setFontSize(12);
+      doc.setTextColor(55);
+      doc.text(`Fecha emisión: ${fechaHoy.toLocaleDateString()}`, 15, 60);
+
+      doc.text(`Validez de oferta: 7 días (hasta ${fechaLimite.toLocaleDateString()})`, 15, 67);
+
+      doc.setLineWidth(0.5);
+      doc.line(15, 70, 195, 70);
+
+      doc.setFontSize(14);
+      doc.text("Detalles del Proyecto:", 15, 80);
+
+      // Mostrar datos relevantes para cliente (sin detalles técnicos)
+      const lines = [
+        `- Objetivo: ${formData.objetivo}`,
+        `- Publicación: ${formData.publicacion}`,
+        `- Público objetivo: ${formData.publico}`,
+        `- Duración final: ${formData.duracionFinal} minutos`,
+        `- Formato entrega: ${formData.formatoEntrega}`,
+        `- Fecha entrega: ${formData.fechaEntrega}`,
+        `- Precio final: $${precio.toFixed(2)}`,
+      ];
+      let y = 90;
+      lines.forEach(line => {
+        doc.text(line, 20, y);
+        y += 8;
+      });
+
+      doc.setFontSize(12);
+      doc.setTextColor(100);
+      doc.text("Gracias por confiar en nuestro servicio de edición.", 15, y + 10);
+
+      // Opcional: detalles internos ocultos (solo para PDF interno)
+      // Si querés, podés generar otro PDF con detalles técnicos para uso interno.
+
+      doc.save(`Presupuesto_Proyecto_${fechaHoy.toISOString().slice(0,10)}.pdf`);
+    }
+
+    document.getElementById("presupuestoForm").addEventListener("submit", e => {
+      e.preventDefault();
+      const form = e.target;
+
+      // Recolectar datos del formulario
+      const formData = {
+        objetivo: form.objetivo.value,
+        publicacion: form.publicacion.value.trim(),
+        publico: form.publico.value.trim(),
+        referenciaEstilo: form.referenciaEstilo.value.trim(),
+
+        materialGrabado: form.materialGrabado.value,
+        formatoMaterial: form.formatoMaterial.value.trim(),
+        resolucionMaterial: form.resolucionMaterial.value.trim(),
+        organizacionMaterial: form.organizacionMaterial.value,
+
+        tipoEdicion: form.tipoEdicion.value,
+        efectos: form.efectos.value,
+        multicamara: form.multicamara.value,
+
+        subtitulos: form.subtitulos.value,
+        musica: form.musica.value,
+        voiceOver: form.voiceOver.value,
+        assets: form.assets.value,
+
+        duracionFinal: Number(form.duracionFinal.value),
+        versiones: Number(form.versiones.value),
+        cortes: form.cortes.value,
+
+        formatoEntrega: form.formatoEntrega.value.trim(),
+
+        fechaEntrega: form.fechaEntrega.value,
+        revisiones: Number(form.revisiones.value),
+        primerVersion: Number(form.primerVersion.value),
+
+        presupuestoEstimado: form.presupuestoEstimado.value ? Number(form.presupuestoEstimado.value) : null,
+        facturacion: form.facturacion.value,
+
+        videosMes: form.videosMes.value ? Number(form.videosMes.value) : 0,
+        trabajoLargoPlazo: form.trabajoLargoPlazo.value,
+      };
+
+      // Validaciones rápidas
+      if (formData.duracionFinal <= 0) {
+        mostrarError("La duración final debe ser mayor que cero.");
+        return;
+      }
+      if (formData.versiones <= 0) {
+        mostrarError("Las versiones deben ser al menos 1.");
+        return;
+      }
+      if (!formData.fechaEntrega) {
+        mostrarError("Ingrese la fecha de entrega.");
+        return;
+      }
+
+      // Calcular horas, dificultad y precio
+      const horas = calcularHoras(formData);
+      const dificultad = clasificarDificultad(horas);
+      const precio = calcularPrecio(horas, formData.facturacion);
+
+      mostrarResultado(precio, horas, dificultad);
+
+      // Guardar en historial interno con fecha
+      guardarHistorial({
+        fecha: new Date().toISOString(),
+        tipoEdicion: formData.tipoEdicion,
+        duracionFinal: formData.duracionFinal,
+        horas,
+        precio,
+      });
+
+      // Mostrar historial si visible
+      if (document.getElementById("historialContainer").style.display !== "none") {
+        mostrarHistorial();
+      }
+
+      ocultarError();
     });
 
-    const promedioHoras = (totalHoras / totalProyectos).toFixed(2);
-    const promedioBase = (totalBase / totalProyectos).toFixed(2);
-    const porcentajeUrgentes = ((urgentes / totalProyectos) * 100).toFixed(1);
-    const tipoMasComun = Object.entries(tipos).sort((a, b) => b[1] - a[1])[0]?.[0] || "-";
+    function mostrarError(msg) {
+      const err = document.getElementById("error");
+      err.style.display = "block";
+      err.textContent = msg;
+    }
+    function ocultarError() {
+      const err = document.getElementById("error");
+      err.style.display = "none";
+      err.textContent = "";
+    }
 
-    resumen.innerHTML = `
-      Total de proyectos: <strong>${totalProyectos}</strong><br>
-      Promedio de horas por proyecto: <strong>${promedioHoras}</strong><br>
-      Promedio de presupuesto base: <strong>$${promedioBase}</strong><br>
-      Porcentaje de proyectos urgentes: <strong>${porcentajeUrgentes}%</strong><br>
-      Tipo más frecuente: <strong>${tipoMasComun}</strong>
-    `;
-
-    insight.innerText = insightsSimbolicos[Math.floor(Math.random() * insightsSimbolicos.length)];
-
-    contenedor.style.display = contenedor.style.display === "none" ? "block" : "none";
-  });
-
-  function guardarHistorial(item) {
-    historial.push(item);
-    localStorage.setItem("historialPresupuestos", JSON.stringify(historial));
-  }
-
-  // Ejemplo (borrar o adaptar)
-  // guardarHistorial({
-  //   fecha: Date.now(),
-  //   tipo: 'Reel',
-  //   duracion: 60,
-  //   horas: 3,
-  //   base: 120,
-  //   urgencia: 'rapido'
-  // });
-</script>
-
-</body>
-</html>
-
-<!-- BOTÓN Y TABLA DE HISTORIAL -->
-<button id="verHistorial" style="background-color:#4b5563;margin-top:1rem;">📁 Ver Historial Interno</button>
-<div id="historialContainer" style="display:none; margin-top:2rem;">
-  <h2>Historial de Presupuestos (Privado)</h2>
-  <table id="tablaHistorial" style="width:100%; border-collapse: collapse;">
-    <thead>
-      <tr style="background-color:#e5e7eb;">
-        <th style="padding:8px;border:1px solid #d1d5db;">Fecha</th>
-        <th style="padding:8px;border:1px solid #d1d5db;">Tipo</th>
-        <th style="padding:8px;border:1px solid #d1d5db;">Duración</th>
-        <th style="padding:8px;border:1px solid #d1d5db;">Horas</th>
-        <th style="padding:8px;border:1px solid #d1d5db;">Base</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-  <div style="margin-top:2rem;">
-    <h3>📊 Resumen Analítico</h3>
-    <p id="resumenAnalitico"></p>
-    <div id="insightSimbolico" style="margin-top:1rem; padding:1rem; background:#fef3c7; border-left:4px solid #f59e0b; border-radius:8px;">
-      <h4 style="margin-top:0">🌱 Insight del Mentor</h4>
-      <p id="mensajeInsight"></p>
-    </div>
-  </div>
-</div>
-
-<script>
-  const historial = JSON.parse(localStorage.getItem("historialPresupuestos") || "[]");
-
-  const insightsSimbolicos = [
-    "¿Este proyecto te conecta con tu propósito o sólo con tu urgencia?",
-    "Recordá: el video no es solo contenido, también es una emoción que viaja.",
-    "¿El cliente está buscando un resultado o una transformación?",
-    "Lo que editás es también un reflejo de lo que estás cultivando en vos mismo.",
-    "A veces, el precio justo es el que también te permite respirar.",
-    "¿Qué nivel de energía vital te pide este proyecto? ¿Estás dispuesto a entregarlo con presencia plena?",
-    "La repetición revela patrones. ¿Qué te está mostrando tu propio historial?",
-    "Editar no es solo cortar. Es construir una narrativa que resuene con el alma del otro."
-  ];
-
-  document.getElementById("verHistorial").addEventListener("click", function () {
-    const contenedor = document.getElementById("historialContainer");
-    const tabla = document.getElementById("tablaHistorial").querySelector("tbody");
-    const resumen = document.getElementById("resumenAnalitico");
-    const insight = document.getElementById("mensajeInsight");
-
-    tabla.innerHTML = "";
-    let totalProyectos = historial.length;
-    let totalHoras = 0;
-    let totalBase = 0;
-    let tipos = {};
-    let urgentes = 0;
-
-    historial.forEach(item => {
-      totalHoras += parseFloat(item.horas);
-      totalBase += parseFloat(item.base);
-      tipos[item.tipo] = (tipos[item.tipo] || 0) + 1;
-      if (item.urgencia === 'rapido') urgentes++;
-
-      const fila = document.createElement("tr");
-      fila.innerHTML = `
-        <td style='padding:8px;border:1px solid #d1d5db;'>${new Date(item.fecha).toLocaleString()}</td>
-        <td style='padding:8px;border:1px solid #d1d5db;'>${item.tipo}</td>
-        <td style='padding:8px;border:1px solid #d1d5db;'>${item.duracion} min</td>
-        <td style='padding:8px;border:1px solid #d1d5db;'>${item.horas}</td>
-        <td style='padding:8px;border:1px solid #d1d5db;'>$${item.base}</td>
-      `;
-      tabla.appendChild(fila);
+    // Botón mostrar/ocultar historial
+    document.getElementById("btnVerHistorial").addEventListener("click", () => {
+      const cont = document.getElementById("historialContainer");
+      if (cont.style.display === "none" || cont.style.display === "") {
+        cont.style.display = "block";
+        mostrarHistorial();
+      } else {
+        cont.style.display = "none";
+      }
     });
 
-    const promedioHoras = (totalHoras / totalProyectos).toFixed(2);
-    const promedioBase = (totalBase / totalProyectos).toFixed(2);
-    const porcentajeUrgentes = ((urgentes / totalProyectos) * 100).toFixed(1);
-    const tipoMasComun = Object.entries(tipos).sort((a, b) => b[1] - a[1])[0]?.[0] || "-";
+    // Botón generar PDF para cliente
+    document.getElementById("btnGenerarPDF").addEventListener("click", () => {
+      const form = document.getElementById("presupuestoForm");
+      const formData = {
+        objetivo: form.objetivo.value,
+        publicacion: form.publicacion.value.trim(),
+        publico: form.publico.value.trim(),
+        referenciaEstilo: form.referenciaEstilo.value.trim(),
 
-    resumen.innerHTML = `
-      Total de proyectos: <strong>${totalProyectos}</strong><br>
-      Promedio de horas por proyecto: <strong>${promedioHoras}</strong><br>
-      Promedio de presupuesto base: <strong>$${promedioBase}</strong><br>
-      Porcentaje de proyectos urgentes: <strong>${porcentajeUrgentes}%</strong><br>
-      Tipo más frecuente: <strong>${tipoMasComun}</strong>
-    `;
+        materialGrabado: form.materialGrabado.value,
+        formatoMaterial: form.formatoMaterial.value.trim(),
+        resolucionMaterial: form.resolucionMaterial.value.trim(),
+        organizacionMaterial: form.organizacionMaterial.value,
 
-    insight.innerText = insightsSimbolicos[Math.floor(Math.random() * insightsSimbolicos.length)];
+        tipoEdicion: form.tipoEdicion.value,
+        efectos: form.efectos.value,
+        multicamara: form.multicamara.value,
 
-    contenedor.style.display = contenedor.style.display === "none" ? "block" : "none";
-  });
+        subtitulos: form.subtitulos.value,
+        musica: form.musica.value,
+        voiceOver: form.voiceOver.value,
+        assets: form.assets.value,
 
-  function guardarHistorial(item) {
-    historial.push(item);
-    localStorage.setItem("historialPresupuestos", JSON.stringify(historial));
-  }
+        duracionFinal: Number(form.duracionFinal.value),
+        versiones: Number(form.versiones.value),
+        cortes: form.cortes.value,
+
+        formatoEntrega: form.formatoEntrega.value.trim(),
+
+        fechaEntrega: form.fechaEntrega.value,
+        revisiones: Number(form.revisiones.value),
+        primerVersion: Number(form.primerVersion.value),
+
+        presupuestoEstimado: form.presupuestoEstimado.value ? Number(form.presupuestoEstimado.value) : null,
+        facturacion: form.facturacion.value,
+
+        videosMes: form.videosMes.value ? Number(form.videosMes.value) : 0,
+        trabajoLargoPlazo: form.trabajoLargoPlazo.value,
+      };
+
+      const horas = calcularHoras(formData);
+      const dificultad = clasificarDificultad(horas);
+      const precio = calcularPrecio(horas, formData.facturacion);
+
+      generarPDF(formData, precio, horas, dificultad);
+    });
+
+  })();
 </script>
+
 </body>
 </html>
