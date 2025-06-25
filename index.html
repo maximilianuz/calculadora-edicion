@@ -1,0 +1,106 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calculadora de Presupuesto de Video</title>
+</head>
+<body style="font-family:sans-serif;padding:2rem;">
+<!-- CONTENIDO ACTUAL CONSERVADO -->
+
+<!-- BOTÓN Y TABLA DE HISTORIAL -->
+<button id="verHistorial" style="background-color:#4b5563;margin-top:1rem;">📁 Ver Historial Interno</button>
+<div id="historialContainer" style="display:none; margin-top:2rem;">
+  <h2>Historial de Presupuestos (Privado)</h2>
+  <table id="tablaHistorial" style="width:100%; border-collapse: collapse;">
+    <thead>
+      <tr style="background-color:#e5e7eb;">
+        <th style="padding:8px;border:1px solid #d1d5db;">Fecha</th>
+        <th style="padding:8px;border:1px solid #d1d5db;">Tipo</th>
+        <th style="padding:8px;border:1px solid #d1d5db;">Duración</th>
+        <th style="padding:8px;border:1px solid #d1d5db;">Horas</th>
+        <th style="padding:8px;border:1px solid #d1d5db;">Base</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  <div style="margin-top:2rem;">
+    <h3>📊 Resumen Analítico</h3>
+    <p id="resumenAnalitico"></p>
+    <div id="insightSimbolico" style="margin-top:1rem; padding:1rem; background:#fef3c7; border-left:4px solid #f59e0b; border-radius:8px;">
+      <h4 style="margin-top:0">🌱 Insight del Mentor</h4>
+      <p id="mensajeInsight"></p>
+    </div>
+  </div>
+</div>
+
+<script>
+  const historial = JSON.parse(localStorage.getItem("historialPresupuestos") || "[]");
+
+  const insightsSimbolicos = [
+    "¿Este proyecto te conecta con tu propósito o sólo con tu urgencia?",
+    "Recordá: el video no es solo contenido, también es una emoción que viaja.",
+    "¿El cliente está buscando un resultado o una transformación?",
+    "Lo que editás es también un reflejo de lo que estás cultivando en vos mismo.",
+    "A veces, el precio justo es el que también te permite respirar.",
+    "¿Qué nivel de energía vital te pide este proyecto? ¿Estás dispuesto a entregarlo con presencia plena?",
+    "La repetición revela patrones. ¿Qué te está mostrando tu propio historial?",
+    "Editar no es solo cortar. Es construir una narrativa que resuene con el alma del otro."
+  ];
+
+  document.getElementById("verHistorial").addEventListener("click", function () {
+    const contenedor = document.getElementById("historialContainer");
+    const tabla = document.getElementById("tablaHistorial").querySelector("tbody");
+    const resumen = document.getElementById("resumenAnalitico");
+    const insight = document.getElementById("mensajeInsight");
+
+    tabla.innerHTML = "";
+    let totalProyectos = historial.length;
+    let totalHoras = 0;
+    let totalBase = 0;
+    let tipos = {};
+    let urgentes = 0;
+
+    historial.forEach(item => {
+      totalHoras += parseFloat(item.horas);
+      totalBase += parseFloat(item.base);
+      tipos[item.tipo] = (tipos[item.tipo] || 0) + 1;
+      if (item.urgencia === 'rapido') urgentes++;
+
+      const fila = document.createElement("tr");
+      fila.innerHTML = `
+        <td style='padding:8px;border:1px solid #d1d5db;'>${new Date(item.fecha).toLocaleString()}</td>
+        <td style='padding:8px;border:1px solid #d1d5db;'>${item.tipo}</td>
+        <td style='padding:8px;border:1px solid #d1d5db;'>${item.duracion} min</td>
+        <td style='padding:8px;border:1px solid #d1d5db;'>${item.horas}</td>
+        <td style='padding:8px;border:1px solid #d1d5db;'>$${item.base}</td>
+      `;
+      tabla.appendChild(fila);
+    });
+
+    const promedioHoras = (totalHoras / totalProyectos).toFixed(2);
+    const promedioBase = (totalBase / totalProyectos).toFixed(2);
+    const porcentajeUrgentes = ((urgentes / totalProyectos) * 100).toFixed(1);
+    const tipoMasComun = Object.entries(tipos).sort((a, b) => b[1] - a[1])[0]?.[0] || "-";
+
+    resumen.innerHTML = `
+      Total de proyectos: <strong>${totalProyectos}</strong><br>
+      Promedio de horas por proyecto: <strong>${promedioHoras}</strong><br>
+      Promedio de presupuesto base: <strong>$${promedioBase}</strong><br>
+      Porcentaje de proyectos urgentes: <strong>${porcentajeUrgentes}%</strong><br>
+      Tipo más frecuente: <strong>${tipoMasComun}</strong>
+    `;
+
+    insight.innerText = insightsSimbolicos[Math.floor(Math.random() * insightsSimbolicos.length)];
+
+    contenedor.style.display = contenedor.style.display === "none" ? "block" : "none";
+  });
+
+  function guardarHistorial(item) {
+    historial.push(item);
+    localStorage.setItem("historialPresupuestos", JSON.stringify(historial));
+  }
+</script>
+</body>
+</html>
