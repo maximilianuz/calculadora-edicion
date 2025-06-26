@@ -7,385 +7,363 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         :root {
-            --bg-color: #f9fafb;
-            --text-color: #111827;
-            --card-bg: #ffffff;
-            --border-color: #d1d5db;
-            --primary-color: #3b82f6;
-            --primary-hover: #2563eb;
-            --label-color: #374151;
-            --header-color: #1f2937;
-            --subtle-text: #6b7280;
+            --bg-color: #f9fafb; --text-color: #111827; --card-bg: #ffffff;
+            --border-color: #d1d5db; --primary-color: #3b82f6; --primary-hover: #2563eb;
+            --label-color: #374151; --header-color: #1f2937; --subtle-text: #6b7280;
+            --success-bg: #dcfce7; --success-text: #166534; --info-bg: #e0f2fe;
+            --info-text: #075985;
         }
-
         @media (prefers-color-scheme: dark) {
             :root {
-                --bg-color: #111827;
-                --text-color: #f9fafb;
-                --card-bg: #1f2937;
-                --border-color: #4b5563;
-                --primary-color: #60a5fa;
-                --primary-hover: #3b82f6;
-                --label-color: #d1d5db;
-                --header-color: #f9fafb;
-                --subtle-text: #9ca3af;
+                --bg-color: #111827; --text-color: #f9fafb; --card-bg: #1f2937;
+                --border-color: #4b5563; --primary-color: #60a5fa; --primary-hover: #3b82f6;
+                --label-color: #d1d5db; --header-color: #f9fafb; --subtle-text: #9ca3af;
+                --success-bg: #14532d; --success-text: #dcfce7; --info-bg: #0c4a6e;
+                --info-text: #e0f2fe;
             }
         }
-
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-            margin: 0 auto;
-            padding: 2rem;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            max-width: 800px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0 auto; padding: 2rem; background-color: var(--bg-color);
+            color: var(--text-color); max-width: 900px;
         }
-
-        header {
-            text-align: center;
-            margin-bottom: 3rem;
+        header { text-align: center; margin-bottom: 2rem; }
+        #logo-container {
+            margin-bottom: 1rem; cursor: pointer; border: 2px dashed var(--border-color);
+            border-radius: 8px; padding: 1rem; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; min-height: 100px;
         }
-
-        header img {
-            width: 80px;
-            margin-bottom: 1rem;
-        }
-
-        header h1 {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--header-color);
-            margin: 0;
-        }
-
-        header p {
-            font-size: 1.1rem;
-            color: var(--subtle-text);
-            font-style: italic;
-        }
-
+        #logo-preview { max-width: 150px; max-height: 80px; margin-bottom: 0.5rem; }
+        #logo-placeholder { color: var(--subtle-text); }
+        input[type="file"] { display: none; }
+        h1, h2 { color: var(--header-color); text-align: center; }
         form, #resultado-container, #historial-container {
-            background-color: var(--card-bg);
-            padding: 2rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-            margin-bottom: 2rem;
+            background-color: var(--card-bg); padding: 2rem; border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); margin-bottom: 2rem;
         }
-
-        fieldset {
-            border: none;
-            padding: 0;
-            margin-bottom: 1.5rem;
-        }
-
-        legend {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: var(--header-color);
-            margin-bottom: 1rem;
-        }
-
-        label {
-            font-weight: 600;
-            display: block;
-            margin: 1rem 0 0.5rem;
-            color: var(--label-color);
-        }
-
+        fieldset { border: none; padding: 0; margin-bottom: 1.5rem; }
+        legend { font-size: 1.25rem; font-weight: 600; color: var(--header-color); margin-bottom: 1rem; }
+        label { font-weight: 600; display: block; margin: 1rem 0 0.5rem; color: var(--label-color); }
         input[type="text"], input[type="number"], input[type="date"], select, textarea {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            font-size: 1rem;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            box-sizing: border-box;
+            width: 100%; padding: 0.75rem; border: 1px solid var(--border-color);
+            border-radius: 8px; font-size: 1rem; background-color: var(--bg-color);
+            color: var(--text-color); box-sizing: border-box;
         }
-
+        .button-group { display: flex; gap: 1rem; margin-top: 1.5rem; }
         button {
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 0.8rem 1.5rem;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.2s ease;
+            background-color: var(--primary-color); color: white; border: none;
+            border-radius: 8px; padding: 0.8rem 1.5rem; font-size: 1rem;
+            font-weight: 600; cursor: pointer; transition: background-color 0.2s ease; flex-grow: 1;
         }
-
-        button:hover {
-            background-color: var(--primary-hover);
-        }
-
-        #resultado {
-            background-color: var(--bg-color);
-            border: 1px solid var(--border-color);
-            padding: 1.5rem;
-            border-radius: 8px;
-        }
-
+        button:hover { background-color: var(--primary-hover); }
+        #btnGenerarPDF { background-color: var(--success-bg); color: var(--success-text); }
+        #btnGenerarPDF:hover { background-color: color-mix(in srgb, var(--success-bg) 80%, black); }
+        #resultado { background-color: var(--info-bg); color: var(--info-text); padding: 1.5rem; border-radius: 8px; }
         #resultado h3 { margin-top: 0; }
-        
-        #insights {
-            margin-top: 1rem;
-            padding: 1rem;
-            background-color: #eef2ff;
-            color: #312e81;
-            border-radius: 8px;
-            font-style: italic;
-        }
-        @media (prefers-color-scheme: dark) {
-          #insights {
-            background-color: #3730a3;
-            color: #e0e7ff;
-          }
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 1rem;
-        }
-        th, td {
-            border: 1px solid var(--border-color);
-            padding: 0.6rem;
-            text-align: left;
-        }
-        th { background-color: var(--card-bg); font-weight: 600; }
+        #resultado ul { list-style: none; padding: 0; }
+        #resultado ul li { margin-bottom: 0.5rem; }
+        #resultado-total { font-size: 1.5rem; font-weight: bold; text-align: center; margin-top: 1rem; }
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th, td { border: 1px solid var(--border-color); padding: 0.6rem; text-align: left; }
     </style>
 </head>
 <body>
-
     <header>
-        <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAH0AfQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1VZXWFlaY2RlZmdoaWpzdHV2d3h5eoKDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uLj5OXm5+jp6vLz9PX29/j5+v/aAAwDAQACEQ' || 'LOGO FINAL.jpeg' || 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAH0AfQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1VZXWFlaY2RlZmdoaWpzdHV2d3h5eoKDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uLj5OXm5+jp6vLz9PX29/j5+v/aAAwDAQACEQMRAD8A/v4ooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKAC...eJw==" alt="Lupa Editions Logo">
-        <h1>Calculadora Interna</h1>
-        <p>"El detalle no adorna, comunica."</p>
+        <label for="logoUpload" id="logo-container">
+            <img id="logo-preview" src="" alt="Previsualización del Logo" style="display:none;">
+            <span id="logo-placeholder">Haz clic aquí para subir tu logo</span>
+        </label>
+        <input type="file" id="logoUpload" accept="image/*">
+        
+        <h1>Lupa Editions | Calculadora Interna</h1>
+        <p style="color:var(--subtle-text); font-style: italic;">"El detalle no adorna, comunica."</p>
     </header>
 
     <form id="presupuestoForm" autocomplete="off">
         <fieldset>
-            <legend>1. Contexto del Proyecto</legend>
-            <label for="tipoEdicion">Tipo de Edición</label>
-            <select id="tipoEdicion" required>
-                <option value="" disabled selected>Selecciona una opción</option>
-                <option value="Rápida para redes">Rápida para redes</option>
-                <option value="Corporativa">Corporativa / Educativa</option>
+            <legend>1. Información General</legend>
+            <label for="nombreCliente">Nombre del Cliente/Proyecto</label>
+            <input type="text" id="nombreCliente" placeholder="Ej: Marca Creativa - Video Lanzamiento" required>
+            <label for="objetivo">Objetivo del video</label>
+            <select id="objetivo" required>
+                <option value="Promocional">Promocional / Publicidad</option>
+                <option value="Educativo">Educativo / Tutorial</option>
+                <option value="Redes sociales">Contenido para Redes Sociales</option>
+                <option value="Corporativo">Corporativo / Interno</option>
                 <option value="Documental">Documental / Entrevista</option>
-                <option value="Emocional">Emocional / Boda</option>
-                <option value="Cinematográfica">Cinematográfica / Publicidad</option>
+                <option value="Emocional">Boda / Evento Emocional</option>
+            </select>
+            <label for="referenciaEstilo">Referencia de estilo</label>
+            <textarea id="referenciaEstilo" placeholder="Link de YouTube o descripción del estilo deseado..." rows="2"></textarea>
+        </fieldset>
+
+        <fieldset>
+            <legend>2. Material y Complejidad Técnica</legend>
+            <label for="duracionBruto">Duración del material en bruto (minutos)</label>
+            <input type="number" id="duracionBruto" min="0" placeholder="Aprox. total de minutos grabados" required>
+            <label for="organizacionMaterial">Estado del material</label>
+            <select id="organizacionMaterial" required>
+                <option value="organizado">Organizado y pre-seleccionado</option>
+                <option value="desorganizado">En bruto, requiere limpieza y selección</option>
+            </select>
+            <label for="multicamara">Edición Multicámara</label>
+            <select id="multicamara" required>
+                <option value="No">No</option>
+                <option value="Si">Sí (sincronización necesaria)</option>
             </select>
         </fieldset>
-        
+
         <fieldset>
-            <legend>2. Material y Complejidad</legend>
-            <label for="organizacionMaterial">Organización del Material</label>
-            <select id="organizacionMaterial" required>
-                <option value="Todo organizado">Todo organizado y pre-seleccionado</option>
-                <option value="Hay que limpiar y seleccionar">Material en bruto, requiere limpieza</option>
+            <legend>3. Post-Producción y Extras</legend>
+            <label for="tipoEdicion">Nivel de Dinamismo de la Edición</label>
+            <select id="tipoEdicion" required>
+                <option value="Basica">Básica (cortes simples)</option>
+                <option value="Dinamica">Dinámica (muchos cortes, ritmo rápido)</option>
+                <option value="Cinematografica">Cinematográfica (narrativa visual)</option>
             </select>
-            
             <label for="efectos">Gráficos y Efectos</label>
             <select id="efectos" required>
                 <option value="No">Sin efectos ni gráficos</option>
-                <option value="Efectos simples">Efectos simples y transiciones</option>
-                <option value="Motion graphics/animación avanzada">Motion Graphics / Animación 2D</option>
+                <option value="Simples">Gráficos simples (zócalos, títulos)</option>
+                <option value="Avanzados">Motion Graphics / Animación 2D</option>
             </select>
-            
-            <label for="multicamara">Edición Multicámara</label>
-            <select id="multicamara" required>
-              <option value="No">No</option>
-              <option value="Sí">Sí</option>
-            </select>
-        </fieldset>
-
-        <fieldset>
-            <legend>3. Elementos Extra</legend>
             <label for="subtitulos">Subtítulos</label>
             <select id="subtitulos" required>
                 <option value="No">No</option>
-                <option value="Automáticos">Automáticos (revisión simple)</option>
+                <option value="Automaticos">Automáticos (con revisión)</option>
                 <option value="Personalizados">Personalizados y animados</option>
             </select>
-
-            <label for="voiceOver">Voz en Off (Voice-over)</label>
-            <select id="voiceOver" required>
-                <option value="No">No</option>
-                <option value="Tengo la locución">Cliente provee el audio</option>
-                <option value="Hay que grabarla">Requiere grabación y edición</option>
-            </select>
-        </fieldset>
-
-        <fieldset>
-            <legend>4. Entregables y Revisiones</legend>
-            <label for="duracionFinal">Duración final estimada (minutos)</label>
-            <input type="number" id="duracionFinal" min="1" required value="5">
-
-            <label for="revisiones">Cantidad de rondas de revisión</label>
-            <input type="number" id="revisiones" min="0" value="2" required>
-            
-            <label for="urgencia">Nivel de Urgencia</label>
-            <select id="urgencia" required>
-                <option value="Normal">Normal (Entrega > 7 días)</option>
-                <option value="Moderada">Moderada (Entrega 3-6 días)</option>
-                <option value="Alta">Alta (Entrega < 48 horas)</option>
+             <label for="musica">Música y Sonido</label>
+            <select id="musica" required>
+                <option value="Proporcionada">Proporcionada por cliente</option>
+                <option value="Libreria">Búsqueda en librería de stock</option>
+                <option value="Diseno">Diseño de sonido / Mezcla avanzada</option>
             </select>
         </fieldset>
         
         <fieldset>
-            <legend>5. Tarifa y Facturación</legend>
-             <label for="tarifaHora">Tu Tarifa por Hora (USD)</label>
-            <input type="number" id="tarifaHora" min="1" value="35" required>
-            
-            <label for="facturacion">Modalidad</label>
-            <select id="facturacion" required>
-                <option value="Proyecto">Por Proyecto (Precio Fijo)</option>
-                <option value="Hora">Por Hora</option>
+            <legend>4. Entregables y Plazos</legend>
+            <label for="duracionFinal">Duración final del video (minutos)</label>
+            <input type="number" id="duracionFinal" min="1" required value="3">
+            <label for="versiones">Cantidad de formatos/versiones</label>
+            <input type="number" id="versiones" min="1" value="1" required placeholder="Ej: 16:9, 9:16, 1:1">
+            <label for="revisiones">Rondas de revisión incluidas</label>
+            <input type="number" id="revisiones" min="0" value="2" required>
+             <label for="urgencia">Nivel de Urgencia</label>
+            <select id="urgencia" required>
+                <option value="Normal">Normal ( > 1 semana)</option>
+                <option value="Moderada">Moderada (3-7 días)</option>
+                <option value="Alta">Alta ( < 48 horas)</option>
             </select>
         </fieldset>
 
-        <button type="submit">Calcular Estimación</button>
+        <fieldset>
+            <legend>5. Parámetros de Costo</legend>
+            <label for="tarifaHora">Tu Tarifa por Hora (USD)</label>
+            <input type="number"id="tarifaHora" min="1" value="40" required>
+        </fieldset>
+
+        <div class="button-group">
+            <button type="submit">Calcular Estimación Interna</button>
+            <button type="button" id="btnGenerarPDF" disabled>Generar PDF para Cliente</button>
+        </div>
     </form>
 
     <div id="resultado-container" style="display:none;">
-        <h2>📊 Resumen Analítico</h2>
+        <h2>📊 Resumen de Estimación</h2>
         <div id="resultado"></div>
-        <div id="insights"></div>
     </div>
-
-    <div id="historial-container">
-        <h2>📁 Historial de Presupuestos</h2>
-        <table id="tablaHistorial">
-            <thead>
-                <tr>
-                    <th>Fecha</th>
-                    <th>Tipo Edición</th>
-                    <th>Duración</th>
-                    <th>Horas Est.</th>
-                    <th>Precio (USD)</th>
-                    <th>Nivel</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
-    </div>
-
+    
     <script>
-    document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', () => {
+        const { jsPDF } = window.jspdf;
         const form = document.getElementById('presupuestoForm');
         const resultadoContainer = document.getElementById('resultado-container');
         const resultadoDiv = document.getElementById('resultado');
-        const insightsDiv = document.getElementById('insights');
-        const historialTbody = document.querySelector("#tablaHistorial tbody");
+        const btnGenerarPDF = document.getElementById('btnGenerarPDF');
+        
+        const logoUpload = document.getElementById('logoUpload');
+        const logoContainer = document.getElementById('logo-container');
+        const logoPreview = document.getElementById('logo-preview');
+        const logoPlaceholder = document.getElementById('logo-placeholder');
+        
+        let currentQuoteData = {};
+        let logoBase64 = localStorage.getItem('lupaEditionsLogo') || null;
 
+        // --- GESTIÓN DEL LOGO ---
+        if (logoBase64) {
+            logoPreview.src = logoBase64;
+            logoPreview.style.display = 'block';
+            logoPlaceholder.style.display = 'none';
+        }
+
+        logoContainer.addEventListener('click', () => logoUpload.click());
+        logoUpload.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    logoBase64 = e.target.result;
+                    logoPreview.src = logoBase64;
+                    localStorage.setItem('lupaEditionsLogo', logoBase64);
+                    logoPreview.style.display = 'block';
+                    logoPlaceholder.style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // --- LÓGICA DE CÁLCULO ---
         const factores = {
-            tipoEdicion: { 'Rápida para redes': 4, 'Corporativa': 10, 'Documental': 15, 'Emocional': 12, 'Cinematográfica': 20 },
-            organizacionMaterial: { 'Hay que limpiar y seleccionar': 6, 'Todo organizado': 0 },
-            efectos: { 'No': 0, 'Efectos simples': 5, 'Motion graphics/animación avanzada': 14 },
-            multicamara: { 'Sí': 5, 'No': 0 },
-            subtitulos: { 'No': 0, 'Automáticos': 1, 'Personalizados': 3 },
-            voiceOver: { 'No': 0, 'Tengo la locución': 1, 'Hay que grabarla': 4 },
-            urgencia: { 'Normal': 1.0, 'Moderada': 1.25, 'Alta': 1.6 }
+            organizacion: { desorganizado: 1.4, organizado: 1.0 }, // Multiplicador
+            multicamara: { Si: 5, No: 0 }, // Horas
+            tipoEdicion: { Basica: 0.5, Dinamica: 1.0, Cinematografica: 1.8 }, // Multiplicador
+            efectos: { No: 0, Simples: 4, Avanzados: 12 }, // Horas
+            subtitulos: { No: 0, Automaticos: 1.5, Personalizados: 3 }, // Horas
+            musica: { Proporcionada: 0, Libreria: 1, Diseno: 4 }, // Horas
+            revisiones: 1.5, // Horas por ronda
+            versiones: 1, // Horas por versión extra
+            urgencia: { Normal: 1.0, Moderada: 1.25, Alta: 1.75 } // Multiplicador
         };
 
         function calcularHoras(data) {
-            let horas = 0;
-            horas += factores.tipoEdicion[data.tipoEdicion] || 8;
-            horas += factores.organizacionMaterial[data.organizacionMaterial] || 0;
-            horas += factores.efectos[data.efectos] || 0;
-            horas += factores.multicamara[data.multicamara] || 0;
-            horas += factores.subtitulos[data.subtitulos] || 0;
-            horas += factores.voiceOver[data.voiceOver] || 0;
+            let desglose = { base: 0, complejidad: 0, extras: 0 };
+            
+            // 1. Horas base por visionado y selección
+            // Ratio: por cada 10 min de bruto, se invierte X tiempo.
+            let ratioSeleccion = data.tipoEdicion === 'Cinematografica' ? 0.4 : 0.2;
+            desglose.base = data.duracionBruto * ratioSeleccion;
+            desglose.base *= factores.organizacion[data.organizacionMaterial];
 
-            horas += data.duracionFinal * 0.25; 
-            horas += data.revisiones * 1.5;
+            // 2. Horas de edición por minuto final
+            let horasPorMinutoFinal = 2; // Base para edición simple
+            horasPorMinutoFinal *= factores.tipoEdicion[data.tipoEdicion];
+            desglose.base += data.duracionFinal * horasPorMinutoFinal;
 
-            return horas * (factores.urgencia[data.urgencia] || 1.0);
-        }
-        
-        function clasificarDificultad(horas) {
-            if (horas <= 10) return { nivel: "Principiante", insight: "Proyecto directo. Ideal para un flujo de trabajo rápido y eficiente." };
-            if (horas <= 25) return { nivel: "Intermedio", insight: "Requiere atención al detalle y buena gestión de múltiples elementos. Considera un margen de tiempo para revisiones." };
-            return { nivel: "Avanzado", insight: "Proyecto complejo y de alto valor. La planificación, comunicación y gestión de recursos son clave para el éxito." };
-        }
+            // 3. Sumar horas por complejidad y extras
+            desglose.complejidad += factores.multicamara[data.multicamara];
+            desglose.extras += factores.efectos[data.efectos];
+            desglose.extras += factores.subtitulos[data.subtitulos];
+            desglose.extras += factores.musica[data.musica];
+            desglose.extras += data.revisiones * factores.revisiones;
+            desglose.extras += (data.versiones - 1) * factores.versiones;
 
-        function calcularPrecio(horas, tarifa, modalidad) {
-            let precioBase = horas * tarifa;
-            if (modalidad === 'Proyecto') {
-                return precioBase * 1.20; // Margen del 20% para proyectos cerrados
-            }
-            return precioBase;
-        }
-
-        function guardarHistorial(entry) {
-            let historial = JSON.parse(localStorage.getItem("historialPresupuestosLupa") || "[]");
-            historial.unshift(entry);
-            if(historial.length > 20) historial.pop();
-            localStorage.setItem("historialPresupuestosLupa", JSON.stringify(historial));
-            mostrarHistorial();
-        }
-
-        function mostrarHistorial() {
-            let historial = JSON.parse(localStorage.getItem("historialPresupuestosLupa") || "[]");
-            historialTbody.innerHTML = "";
-            historial.forEach(item => {
-                const tr = document.createElement("tr");
-                tr.innerHTML = `
-                    <td>${new Date(item.fecha).toLocaleDateString()}</td>
-                    <td>${item.tipoEdicion}</td>
-                    <td>${item.duracionFinal} min</td>
-                    <td>${item.horas.toFixed(1)}</td>
-                    <td>$${item.precio.toFixed(2)}</td>
-                    <td>${item.dificultad.nivel}</td>
-                `;
-                historialTbody.appendChild(tr);
-            });
-        }
-        
-        form.addEventListener('submit', function (e) {
-            e.preventDefault();
-            const data = {
-                tipoEdicion: form.tipoEdicion.value,
-                organizacionMaterial: form.organizacionMaterial.value,
-                efectos: form.efectos.value,
-                multicamara: form.multicamara.value,
-                subtitulos: form.subtitulos.value,
-                voiceOver: form.voiceOver.value,
-                duracionFinal: Number(form.duracionFinal.value),
-                revisiones: Number(form.revisiones.value),
-                urgencia: form.urgencia.value,
-                tarifaHora: Number(form.tarifaHora.value),
-                facturacion: form.facturacion.value,
+            let horasTotales = desglose.base + desglose.complejidad + desglose.extras;
+            
+            // 4. Aplicar multiplicador de urgencia
+            let horasFinales = horasTotales * factores.urgencia[data.urgencia];
+            
+            return {
+                total: horasFinales,
+                desglose: {
+                    "Visionado y Selección": desglose.base,
+                    "Complejidad Técnica": desglose.complejidad,
+                    "Extras y Post": desglose.extras
+                },
+                urgencyFactor: factores.urgencia[data.urgencia]
             };
+        }
 
-            const horas = calcularHoras(data);
-            const dificultad = clasificarDificultad(horas);
-            const precio = calcularPrecio(horas, data.tarifaHora, data.facturacion);
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+            
+            // Convertir a números
+            data.duracionBruto = Number(data.duracionBruto);
+            data.duracionFinal = Number(data.duracionFinal);
+            data.versiones = Number(data.versiones);
+            data.revisiones = Number(data.revisiones);
+            data.tarifaHora = Number(data.tarifaHora);
+            
+            const calculo = calcularHoras(data);
+            const precioEstimado = calculo.total * data.tarifaHora;
 
             resultadoContainer.style.display = 'block';
-            resultadoDiv.innerHTML = `
-                <p><strong>Nivel de Dificultad:</strong> ${dificultad.nivel}</p>
-                <p><strong>Horas de Trabajo Estimadas:</strong> ${horas.toFixed(1)} hrs</p>
-                <p><strong>Precio Sugerido (${data.facturacion}):</strong> <span style="font-size: 1.5rem; font-weight: bold; color: var(--primary-color);">$${precio.toFixed(2)} USD</span></p>
-            `;
-            insightsDiv.textContent = `💡 Insight: ${dificultad.insight}`;
-            
-            guardarHistorial({
-                fecha: new Date().toISOString(),
-                tipoEdicion: data.tipoEdicion,
-                duracionFinal: data.duracionFinal,
-                horas: horas,
-                precio: precio,
-                dificultad: dificultad,
-            });
+            let desgloseHTML = '<ul>';
+            for (const [key, value] of Object.entries(calculo.desglose)) {
+                if(value > 0) desgloseHTML += `<li>${key}: ${value.toFixed(1)} hrs</li>`;
+            }
+            if (calculo.urgencyFactor > 1.0) {
+                 desgloseHTML += `<li><strong>Multiplicador Urgencia:</strong> x${calculo.urgencyFactor}</li>`;
+            }
+            desgloseHTML += '</ul>';
 
+            resultadoDiv.innerHTML = `
+                <h3>Desglose de Horas</h3>
+                ${desgloseHTML}
+                <hr>
+                <p><strong>Horas Totales Estimadas:</strong> ${calculo.total.toFixed(1)} hrs</p>
+                <div id="resultado-total">
+                    Precio Sugerido: $${precioEstimado.toFixed(2)} USD
+                </div>
+            `;
+            
+            currentQuoteData = { ...data, precio: precioEstimado, duracion: data.duracionFinal };
+            btnGenerarPDF.disabled = false;
+            
             window.scrollTo({ top: resultadoContainer.offsetTop - 20, behavior: 'smooth' });
         });
+        
+        // --- GENERACIÓN DE PDF ---
+        btnGenerarPDF.addEventListener('click', () => {
+            if (!currentQuoteData.nombreCliente) {
+                alert("Por favor, calcula un presupuesto primero.");
+                return;
+            }
+            
+            const doc = new jsPDF();
+            const fechaHoy = new Date();
+            const fechaLimite = new Date(fechaHoy.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-        mostrarHistorial();
+            if (logoBase64) {
+                 doc.addImage(logoBase64, 'JPEG', 15, 15, 30, 30);
+            }
+
+            doc.setFontSize(24); doc.setFont("helvetica", "bold");
+            doc.text("Lupa Editions", 50, 28);
+            doc.setFontSize(12); doc.setFont("helvetica", "italic");
+            doc.text("El detalle no adorna, comunica.", 50, 36);
+            doc.setLineWidth(0.5); doc.line(15, 45, 195, 45);
+
+            doc.setFontSize(18); doc.setFont("helvetica", "bold");
+            doc.text("Propuesta de Edición de Video", 105, 60, { align: 'center' });
+            
+            doc.setFontSize(11); doc.setFont("helvetica", "normal");
+            doc.text(`Proyecto: ${currentQuoteData.nombreCliente}`, 15, 75);
+            doc.text(`Fecha: ${fechaHoy.toLocaleDateString('es-AR')}`, 15, 82);
+            doc.text(`Validez de la oferta: 7 días (hasta ${fechaLimite.toLocaleDateString('es-AR')})`, 150, 82, {align: 'right'});
+
+            doc.setFontSize(14); doc.setFont("helvetica", "bold");
+            doc.text("Alcance del Proyecto:", 15, 100);
+            
+            const clientInfo = [
+                `- Objetivo: ${currentQuoteData.objetivo}`,
+                `- Duración Estimada: ${currentQuoteData.duracion} minutos.`,
+                `- Entregables: ${currentQuoteData.versiones} versión(es) final(es).`,
+                `- Rondas de Revisión: ${currentQuoteData.revisiones} incluidas.`,
+                `- Elementos Incluidos: Edición ${currentQuoteData.tipoEdicion}, ${currentQuoteData.efectos !== 'No' ? 'gráficos/efectos, ' : ''}${currentQuoteData.subtitulos !== 'No' ? 'subtítulos, ' : ''}búsqueda de música.`,
+            ];
+            doc.setFontSize(12); doc.setFont("helvetica", "normal");
+            doc.text(clientInfo, 20, 110, { lineHeightFactor: 1.5 });
+            
+            doc.setFontSize(16); doc.setFont("helvetica", "bold");
+            doc.text("Inversión Total del Proyecto:", 15, 160);
+            doc.setFontSize(22);
+            doc.text(`$${currentQuoteData.precio.toFixed(2)} USD`, 20, 170);
+
+            doc.setFontSize(10); doc.setFont("helvetica", "bold");
+            doc.text("Términos y Condiciones:", 15, 200);
+            doc.setFont("helvetica", "normal");
+            const terms = `1. Pago: 50% por adelantado para iniciar el proyecto, 50% a la entrega final.\n2. Revisiones: Rondas de revisión adicionales se facturarán a $${currentQuoteData.tarifaHora}/hr.\n3. Materiales: El cliente proveerá todo el material audiovisual base ( फुटेज ).\n4. Entrega: El video final se entregará en formato digital (MP4 H.264) a menos que se especifique lo contrario.`;
+            doc.text(terms, 15, 207, { maxWidth: 180, lineHeightFactor: 1.5 });
+            
+            doc.setFontSize(12); doc.setFont("helvetica", "italic");
+            doc.text("¡Estamos listos para dar vida a tu visión!", 105, 250, { align: 'center' });
+
+            doc.save(`Propuesta_LupaEditions_${currentQuoteData.nombreCliente.replace(/\s/g, '_')}.pdf`);
+        });
     });
     </script>
-
 </body>
 </html>
