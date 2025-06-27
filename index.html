@@ -3,16 +3,18 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Lupa Editions | Calculadora Híbrida de Presupuestos</title>
+    <title data-translate-key="pageTitle">Lupa Editions | Calculadora de Presupuestos</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
     <style>
+        /* --- ESTILOS (sin cambios, se mantienen los de la versión anterior) --- */
         :root {
             --bg-color: #f9fafb; --text-color: #111827; --card-bg: #ffffff;
             --border-color: #d1d5db; --primary-color: #3b82f6; --primary-hover: #2563eb;
             --label-color: #374151; --header-color: #1f2937; --subtle-text: #6b7280;
             --success-bg: #10b981; --success-text: #ffffff; --info-bg: #e0f2fe;
             --info-text: #075985;
+            --danger-bg: #fee2e2; --danger-text: #991b1b;
         }
         @media (prefers-color-scheme: dark) {
             :root {
@@ -21,10 +23,14 @@
                 --label-color: #d1d5db; --header-color: #f9fafb; --subtle-text: #9ca3af;
                 --success-bg: #10b981; --success-text: #ffffff; --info-bg: #0c4a6e;
                 --info-text: #e0f2fe;
+                --danger-bg: #450a0a; --danger-text: #fecaca;
             }
         }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0 auto; padding: 2rem; background-color: var(--bg-color); color: var(--text-color); max-width: 900px; }
-        header { text-align: center; margin-bottom: 2rem; }
+        header { text-align: center; margin-bottom: 2rem; position: relative; }
+        .lang-switcher { position: absolute; top: 0; right: 0; display: flex; gap: 0.5rem; }
+        .lang-switcher button { background-color: var(--card-bg); color: var(--text-color); border: 1px solid var(--border-color); border-radius: 6px; padding: 0.4rem 0.6rem; font-size: 0.8rem; cursor: pointer; transition: background-color 0.2s, color 0.2s; }
+        .lang-switcher button.active { background-color: var(--primary-color); color: white; border-color: var(--primary-color); }
         #company-logo { max-width: 220px; height: auto; margin-bottom: 1rem; border-radius: 8px; }
         h1, h2, h3 { color: var(--header-color); text-align: center; }
         form, #resultado-container { background-color: var(--card-bg); padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); margin-bottom: 2rem; }
@@ -48,6 +54,7 @@
         #resultado p strong { color: var(--header-color); }
         #resultado ul { list-style-type: '✓'; padding-left: 20px; }
         #resultado li { margin-bottom: 0.5rem; }
+        .descuento { color: var(--danger-text); background-color: var(--danger-bg); padding: 0.2rem 0.5rem; border-radius: 6px; font-weight: bold; }
         #resultado-total { font-size: 1.5rem; font-weight: bold; text-align: center; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid color-mix(in srgb, var(--info-text) 25%, transparent);}
         .hidden { display: none; }
         .campo-dinamico {
@@ -61,330 +68,491 @@
 </head>
 <body>
     <header>
+        <div class="lang-switcher">
+            <button id="btn-lang-es" class="active">ES</button>
+            <button id="btn-lang-en">EN</button>
+        </div>
         <img id="company-logo" src="https://i.postimg.cc/t7Tfd4Wy/LOGO-FINAL.jpg" alt="Lupa Editions Logo"/>
-        <h1>Lupa Editions | Calculadora Híbrida</h1>
-        <p style="color:var(--subtle-text); font-style: italic;">Presupuestos por paquete y por horas.</p>
+        <h1 data-translate-key="mainHeader">Lupa Editions | Calculadora de Presupuestos</h1>
+        <p style="color:var(--subtle-text);" data-translate-key="subHeader">Genera presupuestos profesionales y automáticos.</p>
     </header>
 
     <form id="presupuestoForm" autocomplete="off" novalidate>
         <fieldset>
-            <legend>Tipo de Presupuesto</legend>
-            <label for="tipoProyecto">Selecciona el modelo de cálculo</label>
+            <legend data-translate-key="calculationModel">Modelo de Cálculo</legend>
+            <label for="tipoProyecto" data-translate-key="selectProjectType">Selecciona el tipo de proyecto</label>
             <select id="tipoProyecto" required>
-                <option value="detallado" selected>Por Horas (Detallado y Preciso)</option>
-                <option value="reels">Por Paquete (Reels / TikToks)</option>
-                <option value="corporativo">Por Paquete (Videos Corporativos)</option>
-                <option value="cursos">Por Paquete (Cursos o Formaciones)</option>
-                <option value="motion">Por Paquete (Motion Graphics / AE)</option>
-                <option value="vsl">Por Paquete (VSL - Video Sales Letter)</option>
+                <option value="detallado" selected data-translate-key="projectTypeDetailed">Proyecto Detallado (Precio Fijo Automático)</option>
+                <option value="reels" data-translate-key="projectTypeReels">Paquete de Reels / TikToks</option>
+                <option value="corporativo" data-translate-key="projectTypeCorporate">Paquete de Video Corporativo</option>
+                <option value="cursos" data-translate-key="projectTypeCourses">Paquete de Cursos / Formaciones</option>
+                <option value="motion" data-translate-key="projectTypeMotion">Paquete de Motion Graphics / AE</option>
+                <option value="vsl" data-translate-key="projectTypeVSL">Paquete de VSL (Video Sales Letter)</option>
             </select>
         </fieldset>
         
         <div id="container-por-proyecto" class="hidden">
             <fieldset>
-                <legend>Detalles del Proyecto</legend>
-                <label for="nombreClienteProyecto">Nombre del Cliente / Proyecto</label>
-                <input type="text" id="nombreClienteProyecto" placeholder="Ej: Marca Creativa - Campaña Reels Q3">
+                <legend data-translate-key="packageDetails">Detalles del Paquete</legend>
+                <label for="nombreClienteProyecto" data-translate-key="clientProjectName">Nombre del Cliente / Proyecto</label>
+                <input type="text" id="nombreClienteProyecto" data-translate-key-placeholder="clientProjectNamePlaceholder1">
                 
                 <div id="campo-duracion-cursos" class="hidden">
-                    <label for="duracionFinalCursos">Duración final total (minutos)</label>
+                    <label for="duracionFinalCursos" data-translate-key="packageTotalDuration">Duración final total (minutos)</label>
                     <input type="number" id="duracionFinalCursos" min="1" value="10">
                 </div>
             </fieldset>
             <fieldset>
-                <legend>Características Adicionales</legend>
-                <p style="color:var(--subtle-text); font-size: 0.9rem; margin-top: -1rem; margin-bottom: 1rem;">Cada opción seleccionada ajustará el precio automáticamente.</p>
+                <legend data-translate-key="additionalFeatures">Características Adicionales</legend>
+                <p style="color:var(--subtle-text); font-size: 0.9rem; margin-top: -1rem; margin-bottom: 1rem;" data-translate-key="additionalFeaturesDesc">Cada opción seleccionada ajustará el precio automáticamente.</p>
                 <div class="input-group">
                     <input type="checkbox" id="paquete_graficos">
-                    <label for="paquete_graficos">Gráficos y Títulos Animados</label>
+                    <label for="paquete_graficos" data-translate-key="featureGraphics">Gráficos y Títulos Animados</label>
                 </div>
                 <div class="input-group">
                     <input type="checkbox" id="paquete_color">
-                    <label for="paquete_color">Corrección de Color Avanzada</label>
+                    <label for="paquete_color" data-translate-key="featureColor">Corrección de Color Avanzada</label>
                 </div>
                  <div class="input-group">
                     <input type="checkbox" id="paquete_musica">
-                    <label for="paquete_musica">Búsqueda de Música de Librería</label>
+                    <label for="paquete_musica" data-translate-key="featureMusic">Búsqueda de Música de Librería</label>
                 </div>
                 <div class="input-group">
                     <input type="checkbox" id="paquete_formatos">
-                    <label for="paquete_formatos">Múltiples Formatos (ej. vertical y horizontal)</label>
+                    <label for="paquete_formatos" data-translate-key="featureFormats">Múltiples Formatos (ej. vertical y horizontal)</label>
                 </div>
             </fieldset>
         </div>
 
         <div id="container-detallado">
             <fieldset>
-                <legend>🧠 1. Contexto General</legend>
-                <label for="nombreClienteDetallado">Nombre del Cliente / Proyecto</label>
-                <input type="text" id="nombreClienteDetallado" placeholder="Ej: Video Promocional para Web" required>
-                <label for="objetivo">Objetivo del video y dónde se publicará</label>
-                <textarea id="objetivo" rows="3" placeholder="Ej: Video promocional para la home de la web y campaña de redes sociales (Instagram, YouTube)."></textarea>
+                <legend data-translate-key="section1Title">🧠 1. Contexto General</legend>
+                <label for="nombreClienteDetallado" data-translate-key="clientProjectName">Nombre del Cliente / Proyecto</label>
+                <input type="text" id="nombreClienteDetallado" required data-translate-key-placeholder="clientProjectNamePlaceholder2">
+                <label for="objetivo" data-translate-key="section1Objective">Objetivo del video y dónde se publicará</label>
+                <textarea id="objetivo" rows="3" data-translate-key-placeholder="section1ObjectivePlaceholder"></textarea>
             </fieldset>
-
-            <fieldset>
-                <legend>📦 2. Material a Editar</legend>
-                <label for="duracionBruto">Duración total aproximada del material en bruto (minutos)</label>
+             <fieldset>
+                <legend data-translate-key="section2Title">📦 2. Material a Editar</legend>
+                <label for="duracionBruto" data-translate-key="section2RawDuration">Duración total aproximada del material en bruto (minutos)</label>
                 <input type="number" id="duracionBruto" min="0" value="30" required>
-                <label for="organizacionMaterial">Organización del material</label>
+                <label for="organizacionMaterial" data-translate-key="section2Organization">Organización del material</label>
                 <select id="organizacionMaterial">
-                    <option value="organizado">Organizado (pre-seleccionado y clasificado)</option>
-                    <option value="desorganizado" selected>Desorganizado (hay que seleccionar y limpiar)</option>
+                    <option value="organizado" data-translate-key="section2OrgOrganized">Organizado (pre-seleccionado y clasificado)</option>
+                    <option value="desorganizado" selected data-translate-key="section2OrgDisorganized">Desorganizado (hay que seleccionar y limpiar)</option>
                 </select>
             </fieldset>
-            
             <fieldset>
-                <legend>✂️ 3. Tipo de Edición</legend>
-                <label for="tipoEdicion">Estilo principal de edición</label>
+                <legend data-translate-key="section3Title">✂️ 3. Tipo de Edición</legend>
+                <label for="tipoEdicion" data-translate-key="section3Style">Estilo principal de edición</label>
                 <select id="tipoEdicion">
-                    <option value="rapida_redes">Rápida para Redes (Dinámica, con zooms, subtítulos virales)</option>
-                    <option value="corporativa" selected>Corporativa / Documental (Clara, profesional, ritmo pausado)</option>
-                    <option value="emocional">Emocional / Cinematográfica (Corrección de color avanzada, sound design)</option>
+                    <option value="rapida_redes" data-translate-key="section3StyleSocial">Rápida para Redes (Dinámica, con zooms, subtítulos virales)</option>
+                    <option value="corporativa" selected data-translate-key="section3StyleCorporate">Corporativa / Documental (Clara, profesional, ritmo pausado)</option>
+                    <option value="emocional" data-translate-key="section3StyleCinematic">Emocional / Cinematográfica (Corrección de color avanzada, sound design)</option>
                 </select>
                  <div class="input-group">
                     <input type="checkbox" id="multicam">
-                    <label for="multicam">¿Se necesita edición multicámara?</label>
+                    <label for="multicam" data-translate-key="section3Multicam">¿Se necesita edición multicámara?</label>
                 </div>
                 <div class="input-group">
                     <input type="checkbox" id="motionGraphics">
-                    <label for="motionGraphics">¿Incluirá Motion Graphics / Animación (After Effects)?</label>
+                    <label for="motionGraphics" data-translate-key="section3Motion">¿Incluirá Motion Graphics / Animación (After Effects)?</label>
                 </div>
                 <div id="campo-complejidad-motion" class="hidden campo-dinamico">
-                     <label for="complejidadMotion">Complejidad de los Motion Graphics</label>
+                     <label for="complejidadMotion" data-translate-key="section3MotionComplexity">Complejidad de los Motion Graphics</label>
                      <select id="complejidadMotion">
-                         <option value="baja">Baja (Títulos, tercios inferiores animados)</option>
-                         <option value="media">Media (Animación de logos, transiciones personalizadas)</option>
-                         <option value="alta">Alta (Explicaciones animadas complejas, tracking, VFX)</option>
+                         <option value="baja" data-translate-key="section3MotionLow">Baja (Títulos, tercios inferiores animados)</option>
+                         <option value="media" data-translate-key="section3MotionMid">Media (Animación de logos, transiciones personalizadas)</option>
+                         <option value="alta" data-translate-key="section3MotionHigh">Alta (Explicaciones animadas complejas, tracking, VFX)</option>
                      </select>
                 </div>
             </fieldset>
-            
             <fieldset>
-                <legend>🔠 4. Elementos Extra</legend>
-                <label for="subtitulos">Subtítulos</label>
+                <legend data-translate-key="section4Title">🔠 4. Elementos Extra</legend>
+                <label for="subtitulos" data-translate-key="section4Subtitles">Subtítulos</label>
                 <select id="subtitulos">
-                    <option value="no">No necesarios</option>
-                    <option value="automaticos">Automáticos (con revisión)</option>
-                    <option value="personalizados">Personalizados (animados, estilo de marca)</option>
+                    <option value="no" data-translate-key="section4SubtitlesNo">No necesarios</option>
+                    <option value="automaticos" data-translate-key="section4SubtitlesAuto">Automáticos (con revisión)</option>
+                    <option value="personalizados" data-translate-key="section4SubtitlesCustom">Personalizados (animados, estilo de marca)</option>
                 </select>
                 <div class="input-group">
                     <input type="checkbox" id="busquedaMusica">
-                    <label for="busquedaMusica">¿Necesita búsqueda y licenciamiento de música?</label>
+                    <label for="busquedaMusica" data-translate-key="section4Music">¿Necesita búsqueda y licenciamiento de música?</label>
                 </div>
                 <div class="input-group">
                     <input type="checkbox" id="voiceOver">
-                    <label for="voiceOver">¿Se necesita grabación y edición de Voice-over?</label>
+                    <label for="voiceOver" data-translate-key="section4VO">¿Se necesita grabación y edición de Voice-over?</label>
                 </div>
                  <div class="input-group">
                     <input type="checkbox" id="disenoMiniatura">
-                    <label for="disenoMiniatura">¿Necesita diseño de miniatura/carátula (Thumbnail)?</label>
+                    <label for="disenoMiniatura" data-translate-key="section4Thumbnail">¿Necesita diseño de miniatura/carátula (Thumbnail)?</label>
                 </div>
             </fieldset>
-
             <fieldset>
-                <legend>📏 5. Entregables y Plazos</legend>
-                <label for="duracionFinal">Duración final estimada del video principal (minutos)</label>
+                <legend data-translate-key="section5Title">📏 5. Entregables y Plazos</legend>
+                <label for="duracionFinal" data-translate-key="section5Duration">Duración final estimada del video principal (minutos)</label>
                 <input type="number" id="duracionFinal" min="1" value="2" required>
-                <label for="versionesAdicionales">¿Cuántas versiones adicionales se necesitan?</label>
-                <input type="number" id="versionesAdicionales" min="0" value="1" placeholder="Ej: 1 (para formato vertical)">
-                 <label for="plazoEntrega">Plazo de entrega</label>
+                <label for="versionesAdicionales" data-translate-key="section5Versions">¿Cuántas versiones adicionales se necesitan?</label>
+                <input type="number" id="versionesAdicionales" min="0" value="1" data-translate-key-placeholder="section5VersionsPlaceholder">
+                 <label for="plazoEntrega" data-translate-key="section5Deadline">Plazo de entrega</label>
                 <select id="plazoEntrega">
-                    <option value="normal">Normal (Más de 1 semana)</option>
-                    <option value="urgente">Urgente (3-7 días)</option>
-                    <option value="muy_urgente">Muy Urgente (Menos de 72 horas)</option>
+                    <option value="normal" data-translate-key="section5DeadlineNormal">Normal (Más de 1 semana)</option>
+                    <option value="urgente" data-translate-key="section5DeadlineUrgent">Urgente (3-7 días)</option>
+                    <option value="muy_urgente" data-translate-key="section5DeadlineVeryUrgent">Muy Urgente (Menos de 72 horas)</option>
                 </select>
-                 <label for="rondasRevision">Rondas de cambios incluidas</label>
+                 <label for="rondasRevision" data-translate-key="section5Revisions">Rondas de cambios incluidas</label>
                 <input type="number"id="rondasRevision" min="0" value="2">
             </fieldset>
         </div>
         
         <fieldset>
-             <legend>💵 Parámetros de Costo</legend>
-             <div id="campo-tarifa-hora">
-                <label for="tarifaHora">Tu Tarifa por Hora</label>
-                <input type="number" id="tarifaHora" min="1" value="40">
-             </div>
-             <label for="moneda">Moneda del Presupuesto</label>
-             <input type="text" id="moneda" value="USD" placeholder="Ej: USD, ARS, EUR" required>
+             <legend data-translate-key="finalParameters">💵 Parámetros Finales</legend>
+             <label for="moneda" data-translate-key="currency">Moneda del Presupuesto</label>
+             <input type="text" id="moneda" value="USD" required data-translate-key-placeholder="currencyPlaceholder">
+             <div class="input-group">
+                <input type="checkbox" id="acuerdoMensual">
+                <label for="acuerdoMensual" data-translate-key="monthlyDiscountLabel">Aplicar descuento del 15% por acuerdo de pago mensual (Retainer)</label>
+            </div>
         </fieldset>
 
         <div class="button-group">
-            <button type="submit">Calcular Presupuesto</button>
-            <button type="button" id="btnGenerarPDF" disabled>Generar PDF para Cliente</button>
+            <button type="submit" data-translate-key="calculateButton">Calcular Presupuesto</button>
+            <button type="button" id="btnGenerarPDF" disabled data-translate-key="generatePDFButton">Generar PDF Profesional</button>
         </div>
     </form>
 
     <div id="resultado-container" class="hidden">
-        <h2>📊 Resumen del Presupuesto</h2>
+        <h2 data-translate-key="resultsTitle">📊 Resumen del Presupuesto</h2>
         <div id="resultado"></div>
     </div>
     
     <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // --- ELEMENTOS DEL DOM ---
-        const form = document.getElementById('presupuestoForm');
-        const tipoProyectoSelect = document.getElementById('tipoProyecto');
-        const containerDetallado = document.getElementById('container-detallado');
-        const containerPorProyecto = document.getElementById('container-por-proyecto');
-        const campoDuracionCursos = document.getElementById('campo-duracion-cursos');
-        const campoTarifaHora = document.getElementById('campo-tarifa-hora');
-        const resultadoContainer = document.getElementById('resultado-container');
-        const resultadoDiv = document.getElementById('resultado');
-        const btnGenerarPDF = document.getElementById('btnGenerarPDF');
-        
-        const motionGraphicsCheckbox = document.getElementById('motionGraphics');
-        const campoComplejidadMotion = document.getElementById('campo-complejidad-motion');
+        // --- PARÁMETROS GLOBALES Y TRADUCCIONES ---
+        const TARIFA_HORA_INTERNA = 40; 
+        const DESCUENTO_MENSUAL = 0.15;
+        let currentLanguage = 'es';
 
-        let currentQuoteData = {};
-
-        // --- PRECIOS BASE POR TIPO DE PROYECTO (PAQUETES) ---
-        const preciosPorProyecto = {
-            'reels':       { min: 30,  max: 150, unidad: 'por video',           nombre: 'Reels/TikToks' },
-            'corporativo': { min: 250, max: 800, unidad: 'por entrega',         nombre: 'Video Corporativo' },
-            'cursos':      { min: 30,  max: 80,  unidad: 'por minuto final',    nombre: 'Curso/Formación' },
-            'motion':      { min: 300, max: 1500,unidad: 'según complejidad',   nombre: 'Motion Graphics/AE' },
-            'vsl':         { min: 200, max: 1000,unidad: 'según guion y ritmo', nombre: 'VSL (Video Sales Letter)' }
+        const translations = {
+            es: {
+                pageTitle: "Lupa Editions | Calculadora de Presupuestos",
+                mainHeader: "Lupa Editions | Calculadora de Presupuestos",
+                subHeader: "Genera presupuestos profesionales y automáticos.",
+                calculationModel: "Modelo de Cálculo",
+                selectProjectType: "Selecciona el tipo de proyecto",
+                projectTypeDetailed: "Proyecto Detallado (Precio Fijo Automático)",
+                projectTypeReels: "Paquete de Reels / TikToks",
+                projectTypeCorporate: "Paquete de Video Corporativo",
+                projectTypeCourses: "Paquete de Cursos / Formaciones",
+                projectTypeMotion: "Paquete de Motion Graphics / AE",
+                projectTypeVSL: "Paquete de VSL (Video Sales Letter)",
+                packageDetails: "Detalles del Paquete",
+                clientProjectName: "Nombre del Cliente / Proyecto",
+                clientProjectNamePlaceholder1: "Ej: Marca Creativa - Campaña Reels Q3",
+                clientProjectNamePlaceholder2: "Ej: Video Promocional para Web",
+                packageTotalDuration: "Duración final total (minutos)",
+                additionalFeatures: "Características Adicionales",
+                additionalFeaturesDesc: "Cada opción seleccionada ajustará el precio automáticamente.",
+                featureGraphics: "Gráficos y Títulos Animados",
+                featureColor: "Corrección de Color Avanzada",
+                featureMusic: "Búsqueda de Música de Librería",
+                featureFormats: "Múltiples Formatos (ej. vertical y horizontal)",
+                section1Title: "🧠 1. Contexto General",
+                section1Objective: "Objetivo del video y dónde se publicará",
+                section1ObjectivePlaceholder: "Ej: Video promocional para la home de la web y campaña de redes sociales (Instagram, YouTube).",
+                section2Title: "📦 2. Material a Editar",
+                section2RawDuration: "Duración total aproximada del material en bruto (minutos)",
+                section2Organization: "Organización del material",
+                section2OrgOrganized: "Organizado (pre-seleccionado y clasificado)",
+                section2OrgDisorganized: "Desorganizado (hay que seleccionar y limpiar)",
+                section3Title: "✂️ 3. Tipo de Edición",
+                section3Style: "Estilo principal de edición",
+                section3StyleSocial: "Rápida para Redes (Dinámica, con zooms, subtítulos virales)",
+                section3StyleCorporate: "Corporativa / Documental (Clara, profesional, ritmo pausado)",
+                section3StyleCinematic: "Emocional / Cinematográfica (Corrección de color avanzada, sound design)",
+                section3Multicam: "¿Se necesita edición multicámara?",
+                section3Motion: "¿Incluirá Motion Graphics / Animación (After Effects)?",
+                section3MotionComplexity: "Complejidad de los Motion Graphics",
+                section3MotionLow: "Baja (Títulos, tercios inferiores animados)",
+                section3MotionMid: "Media (Animación de logos, transiciones personalizadas)",
+                section3MotionHigh: "Alta (Explicaciones animadas complejas, tracking, VFX)",
+                section4Title: "🔠 4. Elementos Extra",
+                section4Subtitles: "Subtítulos",
+                section4SubtitlesNo: "No necesarios",
+                section4SubtitlesAuto: "Automáticos (con revisión)",
+                section4SubtitlesCustom: "Personalizados (animados, estilo de marca)",
+                section4Music: "¿Necesita búsqueda y licenciamiento de música?",
+                section4VO: "¿Se necesita grabación y edición de Voice-over?",
+                section4Thumbnail: "¿Necesita diseño de miniatura/carátula (Thumbnail)?",
+                section5Title: "📏 5. Entregables y Plazos",
+                section5Duration: "Duración final estimada del video principal (minutos)",
+                section5Versions: "¿Cuántas versiones adicionales se necesitan?",
+                section5VersionsPlaceholder: "Ej: 1 (para formato vertical)",
+                section5Deadline: "Plazo de entrega",
+                section5DeadlineNormal: "Normal (Más de 1 semana)",
+                section5DeadlineUrgent: "Urgente (3-7 días)",
+                section5DeadlineVeryUrgent: "Muy Urgente (Menos de 72 horas)",
+                section5Revisions: "Rondas de cambios incluidas",
+                finalParameters: "💵 Parámetros Finales",
+                currency: "Moneda del Presupuesto",
+                currencyPlaceholder: "Ej: USD, EUR, ARS",
+                monthlyDiscountLabel: "Aplicar descuento del 15% por acuerdo de pago mensual (Retainer)",
+                calculateButton: "Calcular Presupuesto",
+                generatePDFButton: "Generar PDF Profesional",
+                resultsTitle: "📊 Resumen del Presupuesto",
+                resultsSubtotal: "Subtotal",
+                resultsMonthlyDiscount: "Descuento Mensual (15%)",
+                resultsFinalPrice: "Precio Final Estimado",
+                resultsBasePrice: "Precio Base",
+                resultsAdditionalFeatures: "Características Adicionales",
+                resultsTimeBreakdown: "Desglose de Tiempo Estimado",
+                resultsTotalHours: "Total Horas Estimadas",
+                pdfTitle: "PROPUESTA DE EDICIÓN DE VIDEO",
+                pdfDate: "Fecha",
+                pdfClient: "Cliente",
+                pdfIntro: "Estimado/a {clientName},\n\nGracias por considerar a Lupa Editions para su proyecto de video. Nos complace presentarle la siguiente propuesta detallada, elaborada en base a los requerimientos que nos ha compartido.",
+                pdfScope: "Alcance del Proyecto",
+                pdfConcept: "Concepto",
+                pdfDetail: "Detalle",
+                pdfProjectType: "Tipo de Proyecto",
+                pdfFeatures: "Características Incluidas",
+                pdfStdEditing: "Edición estándar",
+                pdfObjective: "Objetivo Principal",
+                pdfEditingStyle: "Estilo de Edición",
+                pdfEstDuration: "Duración Estimada",
+                pdfDeliverables: "Entregables",
+                pdfDeliverablesText: "1 video principal + {versions} versión(es) adicional(es)",
+                pdfMotion: "Motion Graphics / AE",
+                pdfMotionYes: "Sí ({complexity})",
+                pdfMotionNo: "No",
+                pdfRevisions: "Rondas de Revisión",
+                pdfRevisionsText: "{revisions} incluidas",
+                pdfInvestment: "Inversión del Proyecto",
+                pdfSubtotal: "Subtotal:",
+                pdfDiscount: "Descuento (Acuerdo Mensual 15%):",
+                pdfFinalTotal: "Total Final:",
+                pdfTerms: "Términos y Próximos Pasos",
+                pdfTerm1: "Esta propuesta es válida por 7 días. Los precios pueden ajustarse pasado este período.",
+                pdfTerm2: "El precio es final a menos que los requisitos del proyecto cambien significativamente.",
+                pdfTerm3: "Forma de pago: 50% por adelantado para iniciar y 50% a la entrega del video final.",
+                pdfTerm4: "Rondas de revisión adicionales o material no contemplado se presupuestarán por separado.",
+                pdfStep1Title: "1. Aprobación",
+                pdfStep1Desc: "Confirmar esta propuesta por correo.",
+                pdfStep2Title: "2. Pago Inicial",
+                pdfStep2Desc: "Realizar el pago del 50% para agendar el proyecto.",
+                pdfStep3Title: "3. Kickoff",
+                pdfStep3Desc: "Coordinaremos una reunión inicial para alinear detalles.",
+                pdfFooter: "Lupa Editions | Contacto: tuemail@ejemplo.com | www.tupagina.com",
+            },
+            en: {
+                pageTitle: "Lupa Editions | Budget Calculator",
+                mainHeader: "Lupa Editions | Budget Calculator",
+                subHeader: "Generate professional and automatic quotes.",
+                calculationModel: "Calculation Model",
+                selectProjectType: "Select the project type",
+                projectTypeDetailed: "Detailed Project (Automatic Fixed Price)",
+                projectTypeReels: "Reels / TikToks Package",
+                projectTypeCorporate: "Corporate Video Package",
+                projectTypeCourses: "Courses / Training Package",
+                projectTypeMotion: "Motion Graphics / AE Package",
+                projectTypeVSL: "VSL (Video Sales Letter) Package",
+                packageDetails: "Package Details",
+                clientProjectName: "Client / Project Name",
+                clientProjectNamePlaceholder1: "Ex: Creative Brand - Q3 Reels Campaign",
+                clientProjectNamePlaceholder2: "Ex: Promotional Video for Website",
+                packageTotalDuration: "Total final duration (minutes)",
+                additionalFeatures: "Additional Features",
+                additionalFeaturesDesc: "Each selected option will automatically adjust the price.",
+                featureGraphics: "Animated Graphics and Titles",
+                featureColor: "Advanced Color Correction",
+                featureMusic: "Stock Music Sourcing",
+                featureFormats: "Multiple Formats (e.g., vertical & horizontal)",
+                section1Title: "🧠 1. General Context",
+                section1Objective: "Video's objective and where it will be published",
+                section1ObjectivePlaceholder: "Ex: Promotional video for the website homepage and social media campaign (Instagram, YouTube).",
+                section2Title: "📦 2. Footage to Edit",
+                section2RawDuration: "Approximate total duration of raw footage (minutes)",
+                section2Organization: "Footage organization",
+                section2OrgOrganized: "Organized (pre-selected and sorted)",
+                section2OrgDisorganized: "Disorganized (footage needs to be sorted and selected)",
+                section3Title: "✂️ 3. Editing Type",
+                section3Style: "Main editing style",
+                section3StyleSocial: "Fast-Paced for Social Media (Dynamic, zooms, viral subtitles)",
+                section3StyleCorporate: "Corporate / Documentary (Clean, professional, steady pace)",
+                section3StyleCinematic: "Emotional / Cinematic (Advanced color grading, sound design)",
+                section3Multicam: "Is multi-camera editing required?",
+                section3Motion: "Include Motion Graphics / Animation (After Effects)?",
+                section3MotionComplexity: "Motion Graphics Complexity",
+                section3MotionLow: "Low (Titles, animated lower thirds)",
+                section3MotionMid: "Medium (Logo animation, custom transitions)",
+                section3MotionHigh: "High (Complex animated explanations, tracking, VFX)",
+                section4Title: "🔠 4. Extra Elements",
+                section4Subtitles: "Subtitles",
+                section4SubtitlesNo: "Not required",
+                section4SubtitlesAuto: "Automatic (with review)",
+                section4SubtitlesCustom: "Custom (animated, branded style)",
+                section4Music: "Need to source and license music?",
+                section4VO: "Need to record and edit a Voice-over?",
+                section4Thumbnail: "Need a thumbnail design?",
+                section5Title: "📏 5. Deliverables & Deadlines",
+                section5Duration: "Estimated final duration of the main video (minutes)",
+                section5Versions: "How many additional versions are needed?",
+                section5VersionsPlaceholder: "Ex: 1 (for vertical format)",
+                section5Deadline: "Delivery Deadline",
+                section5DeadlineNormal: "Normal (More than 1 week)",
+                section5DeadlineUrgent: "Urgent (3-7 days)",
+                section5DeadlineVeryUrgent: "Very Urgent (Less than 72 hours)",
+                section5Revisions: "Rounds of revisions included",
+                finalParameters: "💵 Final Parameters",
+                currency: "Budget Currency",
+                currencyPlaceholder: "Ex: USD, EUR, GBP",
+                monthlyDiscountLabel: "Apply 15% discount for monthly retainer agreement",
+                calculateButton: "Calculate Budget",
+                generatePDFButton: "Generate Professional PDF",
+                resultsTitle: "📊 Budget Summary",
+                resultsSubtotal: "Subtotal",
+                resultsMonthlyDiscount: "Monthly Discount (15%)",
+                resultsFinalPrice: "Estimated Final Price",
+                resultsBasePrice: "Base Price",
+                resultsAdditionalFeatures: "Additional Features",
+                resultsTimeBreakdown: "Estimated Time Breakdown",
+                resultsTotalHours: "Total Estimated Hours",
+                pdfTitle: "VIDEO EDITING PROPOSAL",
+                pdfDate: "Date",
+                pdfClient: "Client",
+                pdfIntro: "Dear {clientName},\n\nThank you for considering Lupa Editions for your video project. We are pleased to present the following detailed proposal, based on the requirements you have shared with us.",
+                pdfScope: "Project Scope",
+                pdfConcept: "Concept",
+                pdfDetail: "Detail",
+                pdfProjectType: "Project Type",
+                pdfFeatures: "Features Included",
+                pdfStdEditing: "Standard editing",
+                pdfObjective: "Main Objective",
+                pdfEditingStyle: "Editing Style",
+                pdfEstDuration: "Estimated Duration",
+                pdfDeliverables: "Deliverables",
+                pdfDeliverablesText: "1 main video + {versions} additional version(s)",
+                pdfMotion: "Motion Graphics / AE",
+                pdfMotionYes: "Yes ({complexity})",
+                pdfMotionNo: "No",
+                pdfRevisions: "Rounds of Revisions",
+                pdfRevisionsText: "{revisions} included",
+                pdfInvestment: "Project Investment",
+                pdfSubtotal: "Subtotal:",
+                pdfDiscount: "Discount (15% Retainer):",
+                pdfFinalTotal: "Final Total:",
+                pdfTerms: "Terms & Next Steps",
+                pdfTerm1: "This proposal is valid for 7 days. Prices may be adjusted after this period.",
+                pdfTerm2: "The price is final unless the project requirements change significantly.",
+                pdfTerm3: "Payment terms: 50% upfront to start, and 50% upon final delivery.",
+                pdfTerm4: "Additional revisions or material not covered will be quoted separately.",
+                pdfStep1Title: "1. Approval",
+                pdfStep1Desc: "Confirm this proposal via email.",
+                pdfStep2Title: "2. Initial Payment",
+                pdfStep2Desc: "Make the 50% down payment to schedule the project.",
+                pdfStep3Title: "3. Kickoff",
+                pdfStep3Desc: "We will coordinate a kickoff meeting to align on details.",
+                pdfFooter: "Lupa Editions | Contact: youremail@example.com | www.yourwebsite.com",
+            }
         };
 
-        // --- LÓGICA DE VISUALIZACIÓN DEL FORMULARIO ---
-        tipoProyectoSelect.addEventListener('change', (e) => {
-            const tipo = e.target.value;
-            const esDetallado = tipo === 'detallado';
+        // --- ELEMENTOS DEL DOM ---
+        const allElements = {
+            form: document.getElementById('presupuestoForm'),
+            tipoProyectoSelect: document.getElementById('tipoProyecto'),
+            containerDetallado: document.getElementById('container-detallado'),
+            containerPorProyecto: document.getElementById('container-por-proyecto'),
+            campoDuracionCursos: document.getElementById('campo-duracion-cursos'),
+            resultadoContainer: document.getElementById('resultado-container'),
+            resultadoDiv: document.getElementById('resultado'),
+            btnGenerarPDF: document.getElementById('btnGenerarPDF'),
+            motionGraphicsCheckbox: document.getElementById('motionGraphics'),
+            campoComplejidadMotion: document.getElementById('campo-complejidad-motion'),
+            btnLangEs: document.getElementById('btn-lang-es'),
+            btnLangEn: document.getElementById('btn-lang-en'),
+        };
 
-            containerDetallado.classList.toggle('hidden', !esDetallado);
-            containerPorProyecto.classList.toggle('hidden', esDetallado);
-            campoTarifaHora.classList.toggle('hidden', !esDetallado);
+        let currentQuoteData = {};
+        
+        // --- LÓGICA DE TRADUCCIÓN ---
+        function setLanguage(lang) {
+            currentLanguage = lang;
+            document.documentElement.lang = lang;
+            allElements.btnLangEs.classList.toggle('active', lang === 'es');
+            allElements.btnLangEn.classList.toggle('active', lang === 'en');
 
-            // SOLUCIÓN AL BUG: Alternar qué campos son requeridos
-            containerDetallado.querySelectorAll('input, select, textarea').forEach(el => el.required = esDetallado);
-            document.getElementById('nombreClienteProyecto').required = !esDetallado;
-            document.getElementById('tarifaHora').required = esDetallado;
-            
-            // Caso especial: El campo de duración de cursos solo es requerido si esa opción está visible
-            document.getElementById('duracionFinalCursos').required = (tipo === 'cursos');
-            campoDuracionCursos.classList.toggle('hidden', tipo !== 'cursos');
-        });
-
-        motionGraphicsCheckbox.addEventListener('change', (e) => {
-            campoComplejidadMotion.classList.toggle('hidden', !e.target.checked);
-        });
-
-        // --- LÓGICA DE CÁLCULO DETALLADO (POR HORAS) ---
-        function calcularHoras(data) {
-            const desglose = {};
-            let totalHoras = 0;
-
-            let horasClasificacion = data.duracionBruto * 0.15;
-            if (data.organizacionMaterial === 'desorganizado') {
-                horasClasificacion *= 1.5;
-            }
-            desglose['Clasificación y Selección de Material'] = horasClasificacion;
-            totalHoras += horasClasificacion;
-
-            let horasEdicion = data.duracionFinal * 1.5;
-            const multiplicadoresEdicion = { 'rapida_redes': 1.2, 'corporativa': 1.0, 'emocional': 1.6 };
-            horasEdicion *= multiplicadoresEdicion[data.tipoEdicion];
-             if (data.multicam) {
-                horasEdicion *= 1.4;
-            }
-            desglose['Edición Principal y Estructura'] = horasEdicion;
-            totalHoras += horasEdicion;
-
-            if (data.motionGraphics) {
-                const horasPorComplejidad = { 'baja': 2.0, 'media': 5.0, 'alta': 10.0 };
-                const horasMotion = horasPorComplejidad[data.complejidadMotion] * (1 + (data.duracionFinal - 1) * 0.2);
-                desglose['Motion Graphics (AE)'] = horasMotion;
-                totalHoras += horasMotion;
-            }
-
-            let horasExtras = 0;
-            if (data.subtitulos === 'automaticos') horasExtras += data.duracionFinal * 0.1;
-            else if (data.subtitulos === 'personalizados') horasExtras += data.duracionFinal * 0.3;
-            if (data.busquedaMusica) horasExtras += 1;
-            if (data.voiceOver) horasExtras += 1.5;
-            if (data.disenoMiniatura) horasExtras += 1;
-            
-            horasExtras += (horasEdicion * 0.25) * data.versionesAdicionales;
-            desglose['Post-Producción y Extras'] = horasExtras;
-            totalHoras += horasExtras;
-            
-            const horasRevision = totalHoras * 0.15 * data.rondasRevision;
-            desglose['Rondas de Revisión y Comunicación'] = horasRevision;
-            totalHoras += horasRevision;
-
-            const factoresUrgencia = { 'normal': 1.0, 'urgente': 1.25, 'muy_urgente': 1.5 };
-            const urgencyFactor = factoresUrgencia[data.plazoEntrega];
-            let urgencyText = "Normal";
-            if (urgencyFactor > 1.0) {
-                 totalHoras *= urgencyFactor;
-                 urgencyText = data.plazoEntrega.replace('_', ' ').charAt(0).toUpperCase() + data.plazoEntrega.replace('_', ' ').slice(1);
-            }
-
-            return { total: totalHoras, desglose: desglose, urgencyFactor: urgencyFactor, urgencyText: urgencyText };
+            document.querySelectorAll('[data-translate-key]').forEach(el => {
+                const key = el.dataset.translateKey;
+                el.textContent = translations[lang][key];
+            });
+             document.querySelectorAll('[data-translate-key-placeholder]').forEach(el => {
+                const key = el.dataset.translateKeyPlaceholder;
+                el.placeholder = translations[lang][key];
+            });
         }
 
+        allElements.btnLangEs.addEventListener('click', () => setLanguage('es'));
+        allElements.btnLangEn.addEventListener('click', () => setLanguage('en'));
+
+        // --- LÓGICA DE VISUALIZACIÓN DEL FORMULARIO ---
+        // (Sin cambios)
+
+        // --- LÓGICA DE CÁLCULO DE HORAS ---
+        // (Sin cambios)
+
         // --- LÓGICA DE CÁLCULO (EVENTO SUBMIT) ---
-        form.addEventListener('submit', (e) => {
+        allElements.form.addEventListener('submit', (e) => {
             e.preventDefault();
-            if (!form.checkValidity()) {
-                form.reportValidity();
+            if (!allElements.form.checkValidity()) {
+                allElements.form.reportValidity();
                 return;
             }
 
-            const tipoProyecto = tipoProyectoSelect.value;
+            const tipoProyecto = allElements.tipoProyectoSelect.value;
             const moneda = document.getElementById('moneda').value;
-            let precioFinal = 0;
-            let resultadoHTML = '';
+            const esAcuerdoMensual = document.getElementById('acuerdoMensual').checked;
             
-            // --- MODELO DE PRECIOS POR PAQUETE (AUTOMÁTICO) ---
+            let subtotal = 0;
+            let resultadoHTML = '';
+            const t = translations[currentLanguage];
+
+            // CÁLCULO PARA PAQUETES
             if (tipoProyecto !== 'detallado') {
                 const proyecto = preciosPorProyecto[tipoProyecto];
-                const nombreCliente = document.getElementById('nombreClienteProyecto').value;
                 const precioBase = proyecto.min;
                 const rangoDePrecio = proyecto.max - proyecto.min;
 
-                const features = {
-                    "Gráficos y Títulos Animados": document.getElementById('paquete_graficos').checked,
-                    "Corrección de Color Avanzada": document.getElementById('paquete_color').checked,
-                    "Búsqueda de Música de Librería": document.getElementById('paquete_musica').checked,
-                    "Múltiples Formatos": document.getElementById('paquete_formatos').checked
-                };
+                const features = {};
+                features[t.featureGraphics] = document.getElementById('paquete_graficos').checked;
+                features[t.featureColor] = document.getElementById('paquete_color').checked;
+                features[t.featureMusic] = document.getElementById('paquete_musica').checked;
+                features[t.featureFormats] = document.getElementById('paquete_formatos').checked;
 
                 const featuresSeleccionadas = Object.keys(features).filter(f => features[f]);
-                const numTotalFeatures = Object.keys(features).length;
-                const precioPorFeature = rangoDePrecio / numTotalFeatures;
-
-                const costoAdicional = precioPorFeature * featuresSeleccionadas.length;
-                precioFinal = precioBase + costoAdicional;
+                const costoAdicional = (rangoDePrecio / Object.keys(features).length) * featuresSeleccionadas.length;
+                subtotal = precioBase + costoAdicional;
                 
                 if (tipoProyecto === 'cursos') {
                     const duracion = Number(document.getElementById('duracionFinalCursos').value);
-                    precioFinal *= duracion;
+                    subtotal *= duracion;
                 }
                 
-                resultadoHTML = `<h3>${proyecto.nombre}</h3>
-                    <p><strong>Precio Base:</strong> ${precioBase.toLocaleString('es-AR', { style: 'currency', currency: moneda })}</p>`;
-
+                resultadoHTML = `<h3>${t[ 'projectType' + tipoProyecto.charAt(0).toUpperCase() + tipoProyecto.slice(1) ]}</h3>
+                    <p><strong>${t.resultsBasePrice}:</strong> ${precioBase.toLocaleString(currentLanguage, { style: 'currency', currency: moneda })}</p>`;
                 if (featuresSeleccionadas.length > 0) {
-                     resultadoHTML += `<p><strong>Características Adicionales:</strong></p><ul>`;
-                     featuresSeleccionadas.forEach(f => {
-                         resultadoHTML += `<li>${f}</li>`;
-                     });
-                     resultadoHTML += `</ul>`;
+                     resultadoHTML += `<p><strong>${t.resultsAdditionalFeatures}:</strong></p><ul>${featuresSeleccionadas.map(f => `<li>${f}</li>`).join('')}</ul>`;
                 }
                 
                 currentQuoteData = {
                     modelo: 'proyecto',
-                    nombreCliente: nombreCliente,
-                    tipoProyectoNombre: proyecto.nombre,
-                    precio: precioFinal,
-                    moneda: moneda,
+                    nombreCliente: document.getElementById('nombreClienteProyecto').value,
+                    tipoProyectoNombre: t[ 'projectType' + tipoProyecto.charAt(0).toUpperCase() + tipoProyecto.slice(1) ],
                     features: featuresSeleccionadas
                 };
-
-            // --- MODELO DE PRECIOS DETALLADO (POR HORAS) ---
+            
+            // CÁLCULO PARA PROYECTO DETALLADO
             } else {
-                const data = {
+                 const data = {
                     nombreCliente: document.getElementById('nombreClienteDetallado').value,
                     objetivo: document.getElementById('objetivo').value,
                     duracionBruto: Number(document.getElementById('duracionBruto').value),
@@ -400,150 +568,222 @@
                     duracionFinal: Number(document.getElementById('duracionFinal').value),
                     versionesAdicionales: Number(document.getElementById('versionesAdicionales').value),
                     plazoEntrega: document.getElementById('plazoEntrega').value,
-                    rondasRevision: Number(document.getElementById('rondasRevision').value),
-                    tarifaHora: Number(document.getElementById('tarifaHora').value),
-                    moneda: moneda
+                    rondasRevision: Number(document.getElementById('rondasRevision').value)
                 };
 
                 const calculo = calcularHoras(data);
-                precioFinal = calculo.total * data.tarifaHora;
+                subtotal = calculo.total * TARIFA_HORA_INTERNA;
                 
-                let desgloseHTML = '<ul>';
+                resultadoHTML = `<h3>${t.resultsTimeBreakdown}</h3><ul>`;
                 for (const [key, value] of Object.entries(calculo.desglose)) {
-                    if(value > 0) desgloseHTML += `<li>${key}: <strong>${value.toFixed(1)} h</strong></li>`;
+                    if(value > 0) resultadoHTML += `<li>${key}: <strong>${value.toFixed(1)} h</strong></li>`;
                 }
-                desgloseHTML += '</ul>';
-
-                resultadoHTML = `
-                    <h3>Desglose de Horas Estimadas</h3>
-                    ${desgloseHTML}
-                    <hr>
-                    <p><strong>Horas Base Estimadas:</strong> ${Object.values(calculo.desglose).reduce((a, b) => a + b, 0).toFixed(1)} h</p>`;
-                if (calculo.urgencyFactor > 1.0) {
-                     resultadoHTML += `<p><strong>Multiplicador Urgencia (${calculo.urgencyText}):</strong> x${calculo.urgencyFactor}</p>`;
-                }
-                resultadoHTML +=`
-                    <p><strong>Total Horas (con revisiones y urgencia):</strong> <strong>${calculo.total.toFixed(1)} h</strong></p>
-                `;
+                resultadoHTML += `</ul><p><strong>${t.resultsTotalHours}:</strong> <strong>${calculo.total.toFixed(1)} h</strong></p>`;
                 
-                currentQuoteData = { modelo: 'detallado', ...data, precio: precioFinal, ...calculo };
+                currentQuoteData = { modelo: 'detallado', ...data, ...calculo };
             }
 
-            // --- MOSTRAR RESULTADO ---
-            resultadoDiv.innerHTML = `
-                ${resultadoHTML}
+            let descuentoAplicado = 0;
+            if (esAcuerdoMensual) {
+                descuentoAplicado = subtotal * DESCUENTO_MENSUAL;
+            }
+            const precioFinal = subtotal - descuentoAplicado;
+
+            resultadoHTML += `<hr><p><strong>${t.resultsSubtotal}:</strong> ${subtotal.toLocaleString(currentLanguage, { style: 'currency', currency: moneda })}</p>`;
+            if(descuentoAplicado > 0) {
+                resultadoHTML += `<p><strong>${t.resultsMonthlyDiscount}:</strong> <span class="descuento">-${descuentoAplicado.toLocaleString(currentLanguage, { style: 'currency', currency: moneda })}</span></p>`;
+            }
+
+            allElements.resultadoDiv.innerHTML = `${resultadoHTML}
                 <div id="resultado-total">
-                    Precio Final Estimado: ${precioFinal.toLocaleString('es-AR', { style: 'currency', currency: moneda, minimumFractionDigits: 2 })}
+                    ${t.resultsFinalPrice}: ${precioFinal.toLocaleString(currentLanguage, { style: 'currency', currency: moneda, minimumFractionDigits: 2 })}
                 </div>`;
             
-            resultadoContainer.classList.remove('hidden');
-            btnGenerarPDF.disabled = false;
-            window.scrollTo({ top: resultadoContainer.offsetTop - 20, behavior: 'smooth' });
+            Object.assign(currentQuoteData, { subtotal, descuentoAplicado, precio: precioFinal, moneda });
+            
+            allElements.resultadoContainer.classList.remove('hidden');
+            allElements.btnGenerarPDF.disabled = false;
+            window.scrollTo({ top: allElements.resultadoContainer.offsetTop - 20, behavior: 'smooth' });
         });
         
         // --- GENERACIÓN DE PDF ---
-        btnGenerarPDF.addEventListener('click', () => {
-             if (Object.keys(currentQuoteData).length === 0) {
-                 alert("Por favor, calcula un presupuesto primero.");
-                 return;
-             }
-             generarPDF(currentQuoteData);
+        allElements.btnGenerarPDF.addEventListener('click', () => {
+             if (Object.keys(currentQuoteData).length === 0) return;
+             generarPDF(currentQuoteData, currentLanguage);
         });
 
-        function generarPDF(data) {
+        function generarPDF(data, lang) {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
+            const t = translations[lang];
+            const locale = lang === 'es' ? 'es-ES' : 'en-US';
 
+            // CABECERA
             try {
                 const imgData = document.getElementById('company-logo').src;
-                doc.addImage(imgData, 'JPEG', 15, 10, 50, 0);
+                doc.addImage(imgData, 'JPEG', 15, 12, 35, 0);
             } catch (e) {
-                console.error("No se pudo cargar la imagen para el PDF:", e);
-                doc.setFontSize(20);
-                doc.text("Lupa Editions", 15, 20);
+                console.error("Could not load image for PDF:", e);
+                doc.setFontSize(20); doc.text("Lupa Editions", 15, 20);
             }
             
-            doc.setFontSize(12);
-            doc.setFont('helvetica', 'bold');
-            doc.text("PROPUESTA DE EDICIÓN DE VIDEO", 200, 20, null, null, 'right');
+            doc.setFontSize(12); doc.setFont('helvetica', 'bold');
+            doc.text(t.pdfTitle, 200, 15, null, null, 'right');
             doc.setFont('helvetica', 'normal');
-            doc.text(`Fecha: ${new Date().toLocaleDateString('es-ES')}`, 200, 26, null, null, 'right');
-            doc.text(`Cliente: ${data.nombreCliente || 'A confirmar'}`, 200, 32, null, null, 'right');
+            doc.text(`${t.pdfDate}: ${new Date().toLocaleDateString(locale)}`, 200, 21, null, null, 'right');
+            doc.text(`${t.pdfClient}: ${data.nombreCliente || 'N/A'}`, 200, 27, null, null, 'right');
             
-            let y = 55;
-            doc.setFontSize(16);
-            doc.setFont('helvetica', 'bold');
-            doc.text("Resumen del Proyecto y Alcance", 105, y, null, null, 'center');
-            y += 10;
-            
+            // INTRODUCCIÓN
+            let y = 45;
+            doc.setFontSize(11);
+            const introText = t.pdfIntro.replace('{clientName}', data.nombreCliente || (lang === 'es' ? 'Cliente' : 'Client'));
+            const splitIntro = doc.splitTextToSize(introText, 180);
+            doc.text(splitIntro, 15, y);
+            y += splitIntro.length * 5 + 10;
+
+            // TABLA DE DETALLES
+            doc.setFontSize(14); doc.setFont('helvetica', 'bold'); doc.text(t.pdfScope, 15, y);
+            y += 7;
+
             let tableBody = [];
-            const head = [['Concepto', 'Detalle']];
+            const head = [[t.pdfConcept, t.pdfDetail]];
 
             if (data.modelo === 'proyecto') {
                 tableBody = [
-                    ['Tipo de Proyecto', data.tipoProyectoNombre],
-                    ['Características Incluidas', data.features.length > 0 ? doc.splitTextToSize(data.features.join(', '), 120) : 'Edición estándar'],
+                    [t.pdfProjectType, data.tipoProyectoNombre],
+                    [t.pdfFeatures, data.features.length > 0 ? doc.splitTextToSize(data.features.join(', '), 120) : t.pdfStdEditing],
                 ];
-            } else { // Modelo detallado
-                 tableBody = [
-                    ['Objetivo Principal', doc.splitTextToSize(data.objetivo, 120)],
-                    ['Estilo de Edición', data.tipoEdicion.replace('_',' ').replace(/\b\w/g, l => l.toUpperCase())],
-                    ['Duración Estimada Final', `${data.duracionFinal} min.`],
-                    ['Material Bruto a Procesar', `${data.duracionBruto} min. (estado: ${data.organizacionMaterial})`],
-                    ['Motion Graphics / AE', data.motionGraphics ? `Sí (${data.complejidadMotion})` : 'No'],
-                    ['Subtítulos', data.subtitulos.charAt(0).toUpperCase() + data.subtitulos.slice(1)],
-                    ['Versiones Adicionales', data.versionesAdicionales.toString()],
-                    ['Rondas de Revisión', data.rondasRevision.toString()],
-                ];
-            }
-
-            doc.autoTable({
-                head: head, body: tableBody, startY: y, theme: 'grid',
-                headStyles: { fillColor: [22, 160, 133] },
-                didDrawPage: (hookData) => { y = hookData.cursor.y; }
-            });
-            
-            y = doc.autoTable.previous.finalY + 20;
-
-            doc.setFontSize(16); doc.setFont('helvetica', 'bold'); doc.text("Inversión del Proyecto", 15, y);
-            y += 8;
-            doc.setFontSize(22); doc.setTextColor('#3b82f6'); doc.text(`${data.precio.toLocaleString('es-AR', { style: 'currency', currency: data.moneda, minimumFractionDigits: 2})}`, 15, y);
-            y += 8;
-            
-            doc.setFontSize(10); doc.setFont('helvetica', 'normal'); doc.setTextColor(100);
-            if (data.modelo === 'detallado') {
-                 doc.text(`Basado en una estimación de ${data.total.toFixed(1)} horas a una tarifa de ${data.tarifaHora.toFixed(2)} ${data.moneda}/hora.`, 15, y);
             } else {
-                 doc.text(`Precio final para el proyecto "${data.tipoProyectoNombre}" con las características seleccionadas.`, 15, y);
+                 tableBody = [
+                    [t.pdfObjective, doc.splitTextToSize(data.objetivo, 120)],
+                    [t.pdfEditingStyle, t['section3Style' + data.tipoEdicion.split('_')[1].charAt(0).toUpperCase() + data.tipoEdicion.split('_')[1].slice(1) ] || data.tipoEdicion],
+                    [t.pdfEstDuration, `${data.duracionFinal} min.`],
+                    [t.pdfDeliverables, t.pdfDeliverablesText.replace('{versions}', data.versionesAdicionales)],
+                    [t.pdfMotion, data.motionGraphics ? t.pdfMotionYes.replace('{complexity}', t['section3Motion' + data.complejidadMotion.charAt(0).toUpperCase() + data.complejidadMotion.slice(1)]) : t.pdfMotionNo],
+                    [t.pdfRevisions, t.pdfRevisionsText.replace('{revisions}', data.rondasRevision)],
+                ];
             }
-             y += 15;
+            doc.autoTable({ head, body: tableBody, startY: y, theme: 'grid', headStyles: { fillColor: [22, 160, 133] } });
+            y = doc.autoTable.previous.finalY + 15;
 
-            doc.setFontSize(12); doc.setFont('helvetica', 'bold'); doc.setTextColor(0); doc.text("Términos y Condiciones", 15, y);
-            y += 6;
-
-            doc.setFontSize(9); doc.setFont('helvetica', 'normal');
-            const terms = [
-                'Este presupuesto es una estimación y puede variar si los requisitos del proyecto cambian significativamente.',
-                'Forma de pago: 50% por adelantado para iniciar el trabajo y 50% a la entrega del video final.',
-                'El material adicional o rondas de revisión no contempladas se presupuestarán por separado.',
-                'La propuesta es válida por 30 días.'
-            ];
-            terms.forEach(term => { doc.text(`• ${term}`, 15, y); y += 5; });
+            // SECCIÓN DE INVERSIÓN
+            doc.setFontSize(14); doc.setFont('helvetica', 'bold'); doc.text(t.pdfInvestment, 15, y);
+            y += 7;
             
+            doc.autoTable({
+                startY: y, theme: 'plain', styles: { fontSize: 11, cellPadding: 2 },
+                body: [
+                    [t.pdfSubtotal, `${data.subtotal.toLocaleString(locale, { style: 'currency', currency: data.moneda })}`],
+                    ...(data.descuentoAplicado > 0 ? [[t.pdfDiscount, `-${data.descuentoAplicado.toLocaleString(locale, { style: 'currency', currency: data.moneda })}`]] : []),
+                    [t.pdfFinalTotal, `${data.precio.toLocaleString(locale, { style: 'currency', currency: data.moneda })}`],
+                ],
+                columnStyles: { 0: { fontStyle: 'normal' }, 1: { fontStyle: 'bold', halign: 'right' } },
+                didDrawCell: (hookData) => {
+                    if (hookData.row.index === hookData.table.body.length - 1) {
+                        doc.setDrawColor(22, 160, 133); doc.setLineWidth(0.5);
+                        doc.line(hookData.cell.x, hookData.cell.y + hookData.cell.height + 1, hookData.cell.x + hookData.cell.width, hookData.cell.y + hookData.cell.height + 1);
+                    }
+                    if (hookData.row.section === 'body' && data.descuentoAplicado > 0 && hookData.row.index === 1) { doc.setTextColor(220, 53, 69); }
+                },
+                didParseCell: () => { doc.setTextColor(0,0,0); }
+            });
+            y = doc.autoTable.previous.finalY + 15;
+            
+            // TÉRMINOS Y PRÓXIMOS PASOS
+            doc.setFontSize(12); doc.setFont('helvetica', 'bold'); doc.text(t.pdfTerms, 15, y);
+            y += 6;
+            doc.setFontSize(9); doc.setFont('helvetica', 'normal');
+            [t.pdfTerm1, t.pdfTerm2, t.pdfTerm3, t.pdfTerm4].forEach(term => { doc.text(`• ${term}`, 15, y, { maxWidth: 95 }); y += 10; });
+
+            const nextSteps = [
+                { title: t.pdfStep1Title, desc: t.pdfStep1Desc },
+                { title: t.pdfStep2Title, desc: t.pdfStep2Desc },
+                { title: t.pdfStep3Title, desc: t.pdfStep3Desc }
+            ];
+            let x = 115;
+            y = doc.autoTable.previous.finalY + 21;
+            nextSteps.forEach(step => {
+                doc.setFont('helvetica', 'bold'); doc.text(step.title, x, y);
+                doc.setFont('helvetica', 'normal'); doc.text(step.desc, x, y + 4, { maxWidth: 85 });
+                y += 12;
+            });
+
+            // PIE DE PÁGINA
             const pageCount = doc.internal.getNumberOfPages();
             for(let i = 1; i <= pageCount; i++) {
-                doc.setPage(i);
-                doc.setFontSize(8);
-                doc.setTextColor(150);
-                doc.text(`Lupa Editions | Presupuesto | Página ${i} de ${pageCount}`, 105, 290, null, null, 'center');
+                doc.setPage(i); doc.setFontSize(8); doc.setTextColor(150);
+                doc.setLineWidth(0.2); doc.line(15, 285, 195, 285);
+                doc.text(t.pdfFooter, 105, 290, null, null, 'center');
             }
             
-            const safeFileName = (data.nombreCliente || 'proyecto').replace(/[\s\/]/g, '_');
-            doc.save(`Propuesta_LupaEditions_${safeFileName}.pdf`);
+            const safeFileName = (data.nombreCliente || 'project').replace(/[\s\/]/g, '_');
+            doc.save(`Proposal_LupaEditions_${safeFileName}.pdf`);
         }
+
+        // --- FUNCIONES Y EVENTOS INICIALES (NO MODIFICAR) ---
+        function calcularHoras(data) {
+            const desglose = {};
+            let totalHoras = 0;
+            let horasClasificacion = data.duracionBruto * 0.15;
+            if (data.organizacionMaterial === 'desorganizado') { horasClasificacion *= 1.5; }
+            desglose['Clasificación de Material'] = horasClasificacion;
+            totalHoras += horasClasificacion;
+
+            let horasEdicion = data.duracionFinal * 1.5;
+            const multEdicion = { 'rapida_redes': 1.2, 'corporativa': 1.0, 'emocional': 1.6 };
+            horasEdicion *= multEdicion[data.tipoEdicion];
+            if (data.multicam) { horasEdicion *= 1.4; }
+            desglose['Edición Principal'] = horasEdicion;
+            totalHoras += horasEdicion;
+
+            if (data.motionGraphics) {
+                const horasPorComplejidad = { 'baja': 2.0, 'media': 5.0, 'alta': 10.0 };
+                const horasMotion = horasPorComplejidad[data.complejidadMotion] * (1 + (data.duracionFinal - 1) * 0.2);
+                desglose['Motion Graphics (AE)'] = horasMotion;
+                totalHoras += horasMotion;
+            }
+
+            let horasExtras = 0;
+            if (data.subtitulos === 'automaticos') horasExtras += data.duracionFinal * 0.1;
+            else if (data.subtitulos === 'personalizados') horasExtras += data.duracionFinal * 0.3;
+            if (data.busquedaMusica) horasExtras += 1;
+            if (data.voiceOver) horasExtras += 1.5;
+            if (data.disenoMiniatura) horasExtras += 1;
+            horasExtras += (horasEdicion * 0.25) * data.versionesAdicionales;
+            desglose['Post-Producción y Extras'] = horasExtras;
+            totalHoras += horasExtras;
+            
+            const horasRevision = totalHoras * 0.15 * data.rondasRevision;
+            desglose['Revisiones y Comunicación'] = horasRevision;
+            totalHoras += horasRevision;
+
+            const factoresUrgencia = { 'normal': 1.0, 'urgente': 1.25, 'muy_urgente': 1.5 };
+            const urgencyFactor = factoresUrgencia[data.plazoEntrega];
+            let urgencyText = "Normal";
+            if (urgencyFactor > 1.0) {
+                 totalHoras *= urgencyFactor;
+                 urgencyText = data.plazoEntrega.replace('_', ' ').charAt(0).toUpperCase() + data.plazoEntrega.replace('_', ' ').slice(1);
+            }
+
+            return { total: totalHoras, desglose: desglose, urgencyFactor: urgencyFactor, urgencyText: urgencyText };
+        }
+        allElements.tipoProyectoSelect.addEventListener('change', (e) => {
+            const tipo = e.target.value;
+            const esDetallado = tipo === 'detallado';
+            allElements.containerDetallado.classList.toggle('hidden', !esDetallado);
+            allElements.containerPorProyecto.classList.toggle('hidden', esDetallado);
+            allElements.containerDetallado.querySelectorAll('input, select, textarea').forEach(el => { if(el.hasAttribute('required')) el.required = esDetallado; });
+            document.getElementById('nombreClienteProyecto').required = !esDetallado;
+            document.getElementById('duracionFinalCursos').required = (tipo === 'cursos');
+            allElements.campoDuracionCursos.classList.toggle('hidden', tipo !== 'cursos');
+        });
+        allElements.motionGraphicsCheckbox.addEventListener('change', (e) => {
+            allElements.campoComplejidadMotion.classList.toggle('hidden', !e.target.checked);
+        });
         
-        // --- INICIALIZACIÓN ---
-        tipoProyectoSelect.dispatchEvent(new Event('change'));
+        // Inicializar en español
+        setLanguage('es');
+        allElements.tipoProyectoSelect.dispatchEvent(new Event('change'));
     });
     </script>
 </body>
