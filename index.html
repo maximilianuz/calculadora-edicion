@@ -232,6 +232,7 @@
         const TARIFA_HORA_INTERNA = 40; 
         const DESCUENTO_MENSUAL = 0.15;
         let currentLanguage = 'es';
+        let budgetData = {}; // Variable para guardar los datos del presupuesto
 
         const translations = {
             es: {
@@ -447,343 +448,345 @@
                 pdfTerm3: "Payment terms: 50% upfront to start, and 50% upon final delivery.",
                 pdfTerm4: "Additional revisions or material not covered will be quoted separately.",
                 pdfStep1Title: "1. Approval",
-                pdfStep1Desc: "Confirm this proposal via email.",
-                pdfStep2Title: "2. Initial Payment",
-                pdfStep2Desc: "Make the 50% down payment to schedule the project.",
+                pdfStep1Desc: "Confirm this proposal by email.",
+                pdfStep2Title: "2. Down Payment",
+                pdfStep2Desc: "Make the 50% payment to schedule the project.",
                 pdfStep3Title: "3. Kickoff",
-                pdfStep3Desc: "We will coordinate a kickoff meeting to align on details.",
-                pdfFooter: "Lupa Editions | Contact: youremail@example.com | www.yourwebsite.com",
+                pdfStep3Desc: "We will coordinate an initial meeting to align details.",
+                pdfFooter: "Lupa Editions | Contact: youremail@example.com | www.yourpage.com",
             }
         };
 
-        // --- ELEMENTOS DEL DOM ---
-        const allElements = {
-            form: document.getElementById('presupuestoForm'),
-            tipoProyectoSelect: document.getElementById('tipoProyecto'),
-            containerDetallado: document.getElementById('container-detallado'),
-            containerPorProyecto: document.getElementById('container-por-proyecto'),
-            campoDuracionCursos: document.getElementById('campo-duracion-cursos'),
-            resultadoContainer: document.getElementById('resultado-container'),
-            resultadoDiv: document.getElementById('resultado'),
-            btnGenerarPDF: document.getElementById('btnGenerarPDF'),
-            motionGraphicsCheckbox: document.getElementById('motionGraphics'),
-            campoComplejidadMotion: document.getElementById('campo-complejidad-motion'),
-            btnLangEs: document.getElementById('btn-lang-es'),
-            btnLangEn: document.getElementById('btn-lang-en'),
-        };
-
-        let currentQuoteData = {};
+        // --- SELECTORES DE ELEMENTOS ---
+        const form = document.getElementById('presupuestoForm');
+        const btnGenerarPDF = document.getElementById('btnGenerarPDF');
+        const resultadoContainer = document.getElementById('resultado-container');
+        const resultadoDiv = document.getElementById('resultado');
+        const tipoProyecto = document.getElementById('tipoProyecto');
+        const containerDetallado = document.getElementById('container-detallado');
+        const containerPorProyecto = document.getElementById('container-por-proyecto');
+        const motionGraphicsCheckbox = document.getElementById('motionGraphics');
+        const campoComplejidadMotion = document.getElementById('campo-complejidad-motion');
+        const campoDuracionCursos = document.getElementById('campo-duracion-cursos');
+        const btnLangEs = document.getElementById('btn-lang-es');
+        const btnLangEn = document.getElementById('btn-lang-en');
         
         // --- LÓGICA DE TRADUCCIÓN ---
-        function setLanguage(lang) {
+        const setLanguage = (lang) => {
             currentLanguage = lang;
             document.documentElement.lang = lang;
-            allElements.btnLangEs.classList.toggle('active', lang === 'es');
-            allElements.btnLangEn.classList.toggle('active', lang === 'en');
+            btnLangEs.classList.toggle('active', lang === 'es');
+            btnLangEn.classList.toggle('active', lang === 'en');
 
             document.querySelectorAll('[data-translate-key]').forEach(el => {
-                const key = el.dataset.translateKey;
-                el.textContent = translations[lang][key];
+                const key = el.getAttribute('data-translate-key');
+                if (translations[lang][key]) {
+                    el.textContent = translations[lang][key];
+                }
             });
-             document.querySelectorAll('[data-translate-key-placeholder]').forEach(el => {
-                const key = el.dataset.translateKeyPlaceholder;
-                el.placeholder = translations[lang][key];
+            document.querySelectorAll('[data-translate-key-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-translate-key-placeholder');
+                 if (translations[lang][key]) {
+                    el.placeholder = translations[lang][key];
+                }
             });
-        }
+        };
 
-        allElements.btnLangEs.addEventListener('click', () => setLanguage('es'));
-        allElements.btnLangEn.addEventListener('click', () => setLanguage('en'));
+        // --- LÓGICA DE VISIBILIDAD DEL FORMULARIO ---
+        const updateFormVisibility = () => {
+            const selectedType = tipoProyecto.value;
+            if (selectedType === 'detallado') {
+                containerDetallado.classList.remove('hidden');
+                containerPorProyecto.classList.add('hidden');
+            } else {
+                containerDetallado.classList.add('hidden');
+                containerPorProyecto.classList.remove('hidden');
+                // Mostrar campo de duración solo para cursos
+                campoDuracionCursos.classList.toggle('hidden', selectedType !== 'cursos');
+            }
+             // Recalcular si ya hay un resultado visible
+            if (!resultadoContainer.classList.contains('hidden')) {
+                calcularYMostrarPresupuesto();
+            }
+        };
 
-        // --- LÓGICA DE VISUALIZACIÓN DEL FORMULARIO ---
-        // (Sin cambios)
+        motionGraphicsCheckbox.addEventListener('change', () => {
+            campoComplejidadMotion.classList.toggle('hidden', !motionGraphicsCheckbox.checked);
+        });
 
-        // --- LÓGICA DE CÁLCULO DE HORAS ---
-        // (Sin cambios)
+        // --- LÓGICA DE CÁLCULO DE PRESUPUESTO ---
+        const calcularYMostrarPresupuesto = () => {
+            let totalHoras = 0;
+            let precioBase = 0;
+            let desglose = [];
+            let detalles = {};
+            const moneda = document.getElementById('moneda').value || 'USD';
+            const tipo = tipoProyecto.value;
+            
+            // Recopilar datos comunes
+            detalles.acuerdoMensual = document.getElementById('acuerdoMensual').checked;
+            detalles.moneda = moneda;
+            detalles.tipoProyecto = tipo;
+            detalles.nombreProyecto = tipo === 'detallado' ?
+                 document.getElementById('nombreClienteDetallado').value :
+                 document.getElementById('nombreClienteProyecto').value;
 
-        // --- LÓGICA DE CÁLCULO (EVENTO SUBMIT) ---
-        allElements.form.addEventListener('submit', (e) => {
-            e.preventDefault();
-            if (!allElements.form.checkValidity()) {
-                allElements.form.reportValidity();
+            if (tipo === 'detallado') {
+                // Lógica para Presupuesto Detallado
+                const duracionBruto = parseFloat(document.getElementById('duracionBruto').value) || 0;
+                const duracionFinal = parseFloat(document.getElementById('duracionFinal').value) || 0;
+                
+                // 1. Horas por clasificación y selección de material
+                let horasOrganizacion = duracionBruto / 10; // 6 mins por cada minuto de bruto
+                if (document.getElementById('organizacionMaterial').value === 'organizado') {
+                    horasOrganizacion *= 0.5; // Mitad de tiempo si ya está organizado
+                }
+                totalHoras += horasOrganizacion;
+                desglose.push(`Organización Material: ${horasOrganizacion.toFixed(1)}h`);
+
+                // 2. Horas por edición base
+                let horasEdicionBase = duracionFinal * 3; // 3 horas por cada minuto final de video
+                totalHoras += horasEdicionBase;
+                desglose.push(`Edición Base: ${horasEdicionBase.toFixed(1)}h`);
+
+                // 3. Modificadores por complejidad de edición
+                const tipoEdicion = document.getElementById('tipoEdicion').value;
+                if (tipoEdicion === 'rapida_redes') totalHoras *= 1.3;
+                if (tipoEdicion === 'emocional') totalHoras *= 1.5;
+
+                // 4. Extras
+                if (document.getElementById('multicam').checked) totalHoras += 2;
+                if (document.getElementById('motionGraphics').checked) {
+                    const complejidad = document.getElementById('complejidadMotion').value;
+                    if (complejidad === 'baja') totalHoras += duracionFinal * 0.5;
+                    if (complejidad === 'media') totalHoras += duracionFinal * 1;
+                    if (complejidad === 'alta') totalHoras += duracionFinal * 2;
+                }
+                const subtitulos = document.getElementById('subtitulos').value;
+                if (subtitulos === 'automaticos') totalHoras += duracionFinal * 0.3;
+                if (subtitulos === 'personalizados') totalHoras += duracionFinal * 0.8;
+
+                if (document.getElementById('busquedaMusica').checked) totalHoras += 1;
+                if (document.getElementById('voiceOver').checked) totalHoras += 2;
+                if (document.getElementById('disenoMiniatura').checked) totalHoras += 1.5;
+
+                // 5. Versiones y revisiones
+                totalHoras += (parseFloat(document.getElementById('versionesAdicionales').value) || 0) * (totalHoras * 0.2); // 20% del tiempo total por versión extra
+                totalHoras += (parseFloat(document.getElementById('rondasRevision').value) || 0) * 0.75; // 45 mins por ronda de revisión
+
+                // 6. Urgencia
+                const plazo = document.getElementById('plazoEntrega').value;
+                if (plazo === 'urgente') totalHoras *= 1.25;
+                if (plazo === 'muy_urgente') totalHoras *= 1.5;
+
+                precioBase = totalHoras * TARIFA_HORA_INTERNA;
+
+            } else {
+                // Lógica para Paquetes Fijos
+                const preciosPaquetes = {
+                    reels: 150,
+                    corporativo: 600,
+                    cursos: 80, // Precio por minuto final
+                    motion: 500,
+                    vsl: 400
+                };
+                precioBase = preciosPaquetes[tipo];
+                
+                if (tipo === 'cursos') {
+                    const duracionCursos = parseFloat(document.getElementById('duracionFinalCursos').value) || 0;
+                    precioBase *= duracionCursos;
+                }
+
+                // Ajustes por características adicionales
+                if (document.getElementById('paquete_graficos').checked) precioBase *= 1.25;
+                if (document.getElementById('paquete_color').checked) precioBase *= 1.3;
+                if (document.getElementById('paquete_musica').checked) precioBase += 50;
+                if (document.getElementById('paquete_formatos').checked) precioBase *= 1.3;
+            }
+            
+            // Aplicar descuento
+            const subtotal = precioBase;
+            const descuento = detalles.acuerdoMensual ? subtotal * DESCUENTO_MENSUAL : 0;
+            const totalFinal = subtotal - descuento;
+            
+            // Guardar datos para el PDF
+            budgetData = { ...detalles, subtotal, descuento, totalFinal, totalHoras, desglose };
+
+            // Mostrar resultados
+            let htmlResultado = ``;
+            if (tipo === 'detallado') {
+                htmlResultado += `<p><strong>${translations[currentLanguage].resultsTimeBreakdown}:</strong></p><ul>`;
+                desglose.forEach(item => htmlResultado += `<li>${item}</li>`);
+                htmlResultado += `</ul><p><strong>${translations[currentLanguage].resultsTotalHours}:</strong> ${totalHoras.toFixed(1)}h</p><hr>`;
+            } else {
+                 htmlResultado += `<p><strong>${translations[currentLanguage].resultsBasePrice}:</strong> ${subtotal.toFixed(2)} ${moneda}</p>`;
+            }
+
+            htmlResultado += `<div id="resultado-total">`;
+            if (detalles.acuerdoMensual) {
+                htmlResultado += `<p>${translations[currentLanguage].resultsSubtotal}: ${subtotal.toFixed(2)} ${moneda}</p>`;
+                htmlResultado += `<p>${translations[currentLanguage].resultsMonthlyDiscount}: <span class="descuento">- ${descuento.toFixed(2)} ${moneda}</span></p>`;
+            }
+            htmlResultado += `<p><strong>${translations[currentLanguage].resultsFinalPrice}: ${totalFinal.toFixed(2)} ${moneda}</strong></p>`;
+            htmlResultado += `</div>`;
+
+            resultadoDiv.innerHTML = htmlResultado;
+            resultadoContainer.classList.remove('hidden');
+            btnGenerarPDF.disabled = false;
+        };
+
+        // --- LÓGICA DE GENERACIÓN DE PDF ---
+        const generarPDF = () => {
+            // Asegurarse de que las librerías están cargadas
+            if (typeof window.jspdf === 'undefined' || typeof window.jspdf.jsPDF === 'undefined') {
+                alert('Error: La librería jsPDF no se ha cargado correctamente.');
                 return;
             }
-
-            const tipoProyecto = allElements.tipoProyectoSelect.value;
-            const moneda = document.getElementById('moneda').value;
-            const esAcuerdoMensual = document.getElementById('acuerdoMensual').checked;
-            
-            let subtotal = 0;
-            let resultadoHTML = '';
-            const t = translations[currentLanguage];
-
-            // CÁLCULO PARA PAQUETES
-            if (tipoProyecto !== 'detallado') {
-                const proyecto = preciosPorProyecto[tipoProyecto];
-                const precioBase = proyecto.min;
-                const rangoDePrecio = proyecto.max - proyecto.min;
-
-                const features = {};
-                features[t.featureGraphics] = document.getElementById('paquete_graficos').checked;
-                features[t.featureColor] = document.getElementById('paquete_color').checked;
-                features[t.featureMusic] = document.getElementById('paquete_musica').checked;
-                features[t.featureFormats] = document.getElementById('paquete_formatos').checked;
-
-                const featuresSeleccionadas = Object.keys(features).filter(f => features[f]);
-                const costoAdicional = (rangoDePrecio / Object.keys(features).length) * featuresSeleccionadas.length;
-                subtotal = precioBase + costoAdicional;
-                
-                if (tipoProyecto === 'cursos') {
-                    const duracion = Number(document.getElementById('duracionFinalCursos').value);
-                    subtotal *= duracion;
-                }
-                
-                resultadoHTML = `<h3>${t[ 'projectType' + tipoProyecto.charAt(0).toUpperCase() + tipoProyecto.slice(1) ]}</h3>
-                    <p><strong>${t.resultsBasePrice}:</strong> ${precioBase.toLocaleString(currentLanguage, { style: 'currency', currency: moneda })}</p>`;
-                if (featuresSeleccionadas.length > 0) {
-                     resultadoHTML += `<p><strong>${t.resultsAdditionalFeatures}:</strong></p><ul>${featuresSeleccionadas.map(f => `<li>${f}</li>`).join('')}</ul>`;
-                }
-                
-                currentQuoteData = {
-                    modelo: 'proyecto',
-                    nombreCliente: document.getElementById('nombreClienteProyecto').value,
-                    tipoProyectoNombre: t[ 'projectType' + tipoProyecto.charAt(0).toUpperCase() + tipoProyecto.slice(1) ],
-                    features: featuresSeleccionadas
-                };
-            
-            // CÁLCULO PARA PROYECTO DETALLADO
-            } else {
-                 const data = {
-                    nombreCliente: document.getElementById('nombreClienteDetallado').value,
-                    objetivo: document.getElementById('objetivo').value,
-                    duracionBruto: Number(document.getElementById('duracionBruto').value),
-                    organizacionMaterial: document.getElementById('organizacionMaterial').value,
-                    tipoEdicion: document.getElementById('tipoEdicion').value,
-                    multicam: document.getElementById('multicam').checked,
-                    motionGraphics: document.getElementById('motionGraphics').checked,
-                    complejidadMotion: document.getElementById('complejidadMotion').value,
-                    subtitulos: document.getElementById('subtitulos').value,
-                    busquedaMusica: document.getElementById('busquedaMusica').checked,
-                    voiceOver: document.getElementById('voiceOver').checked,
-                    disenoMiniatura: document.getElementById('disenoMiniatura').checked,
-                    duracionFinal: Number(document.getElementById('duracionFinal').value),
-                    versionesAdicionales: Number(document.getElementById('versionesAdicionales').value),
-                    plazoEntrega: document.getElementById('plazoEntrega').value,
-                    rondasRevision: Number(document.getElementById('rondasRevision').value)
-                };
-
-                const calculo = calcularHoras(data);
-                subtotal = calculo.total * TARIFA_HORA_INTERNA;
-                
-                resultadoHTML = `<h3>${t.resultsTimeBreakdown}</h3><ul>`;
-                for (const [key, value] of Object.entries(calculo.desglose)) {
-                    if(value > 0) resultadoHTML += `<li>${key}: <strong>${value.toFixed(1)} h</strong></li>`;
-                }
-                resultadoHTML += `</ul><p><strong>${t.resultsTotalHours}:</strong> <strong>${calculo.total.toFixed(1)} h</strong></p>`;
-                
-                currentQuoteData = { modelo: 'detallado', ...data, ...calculo };
-            }
-
-            let descuentoAplicado = 0;
-            if (esAcuerdoMensual) {
-                descuentoAplicado = subtotal * DESCUENTO_MENSUAL;
-            }
-            const precioFinal = subtotal - descuentoAplicado;
-
-            resultadoHTML += `<hr><p><strong>${t.resultsSubtotal}:</strong> ${subtotal.toLocaleString(currentLanguage, { style: 'currency', currency: moneda })}</p>`;
-            if(descuentoAplicado > 0) {
-                resultadoHTML += `<p><strong>${t.resultsMonthlyDiscount}:</strong> <span class="descuento">-${descuentoAplicado.toLocaleString(currentLanguage, { style: 'currency', currency: moneda })}</span></p>`;
-            }
-
-            allElements.resultadoDiv.innerHTML = `${resultadoHTML}
-                <div id="resultado-total">
-                    ${t.resultsFinalPrice}: ${precioFinal.toLocaleString(currentLanguage, { style: 'currency', currency: moneda, minimumFractionDigits: 2 })}
-                </div>`;
-            
-            Object.assign(currentQuoteData, { subtotal, descuentoAplicado, precio: precioFinal, moneda });
-            
-            allElements.resultadoContainer.classList.remove('hidden');
-            allElements.btnGenerarPDF.disabled = false;
-            window.scrollTo({ top: allElements.resultadoContainer.offsetTop - 20, behavior: 'smooth' });
-        });
-        
-        // --- GENERACIÓN DE PDF ---
-        allElements.btnGenerarPDF.addEventListener('click', () => {
-             if (Object.keys(currentQuoteData).length === 0) return;
-             generarPDF(currentQuoteData, currentLanguage);
-        });
-
-        function generarPDF(data, lang) {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
-            const t = translations[lang];
-            const locale = lang === 'es' ? 'es-ES' : 'en-US';
 
-            // CABECERA
-            try {
-                const imgData = document.getElementById('company-logo').src;
-                doc.addImage(imgData, 'JPEG', 15, 12, 35, 0);
-            } catch (e) {
-                console.error("Could not load image for PDF:", e);
-                doc.setFontSize(20); doc.text("Lupa Editions", 15, 20);
+            const t = translations[currentLanguage]; // Textos en el idioma actual
+            const clientName = budgetData.nombreProyecto || 'N/A';
+            
+            // Añadir Logo
+            const logo = document.getElementById('company-logo');
+            if(logo.complete) {
+                doc.addImage(logo, 'JPEG', 15, 15, 50, 15);
             }
-            
-            doc.setFontSize(12); doc.setFont('helvetica', 'bold');
-            doc.text(t.pdfTitle, 200, 15, null, null, 'right');
-            doc.setFont('helvetica', 'normal');
-            doc.text(`${t.pdfDate}: ${new Date().toLocaleDateString(locale)}`, 200, 21, null, null, 'right');
-            doc.text(`${t.pdfClient}: ${data.nombreCliente || 'N/A'}`, 200, 27, null, null, 'right');
-            
-            // INTRODUCCIÓN
-            let y = 45;
+
+            // Cabecera
+            doc.setFontSize(22);
+            doc.setTextColor(31, 41, 55); // --header-color
+            doc.text(t.pdfTitle, 105, 25, { align: 'center' });
+
             doc.setFontSize(11);
-            const introText = t.pdfIntro.replace('{clientName}', data.nombreCliente || (lang === 'es' ? 'Cliente' : 'Client'));
-            const splitIntro = doc.splitTextToSize(introText, 180);
-            doc.text(splitIntro, 15, y);
-            y += splitIntro.length * 5 + 10;
+            doc.setTextColor(107, 114, 128); // --subtle-text
+            doc.text(`${t.pdfDate}: ${new Date().toLocaleDateString()}`, 20, 45);
+            doc.text(`${t.pdfClient}: ${clientName}`, 20, 52);
 
-            // TABLA DE DETALLES
-            doc.setFontSize(14); doc.setFont('helvetica', 'bold'); doc.text(t.pdfScope, 15, y);
-            y += 7;
+            // Introducción
+            doc.setFontSize(11);
+            doc.setTextColor(55, 65, 81); // --label-color
+            const introText = t.pdfIntro.replace('{clientName}', clientName);
+            const introLines = doc.splitTextToSize(introText, 170);
+            doc.text(introLines, 20, 70);
 
-            let tableBody = [];
-            const head = [[t.pdfConcept, t.pdfDetail]];
+            // Tabla de Alcance del Proyecto
+            let bodyData = [];
+            const tipoProyectoTexto = document.querySelector(`#tipoProyecto option[value="${budgetData.tipoProyecto}"]`).textContent;
+            
+            if (budgetData.tipoProyecto === 'detallado') {
+                const duracionFinal = document.getElementById('duracionFinal').value;
+                const versiones = document.getElementById('versionesAdicionales').value;
+                const rondas = document.getElementById('rondasRevision').value;
+                const estiloEdicion = document.querySelector(`#tipoEdicion option[value="${document.getElementById('tipoEdicion').value}"]`).textContent;
+                const motionChecked = document.getElementById('motionGraphics').checked;
+                let motionText = t.pdfMotionNo;
+                if(motionChecked) {
+                    const comp = document.querySelector(`#complejidadMotion option[value="${document.getElementById('complejidadMotion').value}"]`).textContent;
+                    motionText = t.pdfMotionYes.replace('{complexity}', comp);
+                }
 
-            if (data.modelo === 'proyecto') {
-                tableBody = [
-                    [t.pdfProjectType, data.tipoProyectoNombre],
-                    [t.pdfFeatures, data.features.length > 0 ? doc.splitTextToSize(data.features.join(', '), 120) : t.pdfStdEditing],
+                bodyData = [
+                    [t.pdfProjectType, tipoProyectoTexto],
+                    [t.pdfObjective, document.getElementById('objetivo').value || 'N/A'],
+                    [t.pdfEditingStyle, estiloEdicion],
+                    [t.pdfEstDuration, `${duracionFinal} min`],
+                    [t.pdfDeliverables, t.pdfDeliverablesText.replace('{versions}', versiones)],
+                    [t.pdfMotion, motionText],
+                    [t.pdfRevisions, t.pdfRevisionsText.replace('{revisions}', rondas)]
                 ];
+
             } else {
-                 tableBody = [
-                    [t.pdfObjective, doc.splitTextToSize(data.objetivo, 120)],
-                    [t.pdfEditingStyle, t['section3Style' + data.tipoEdicion.split('_')[1].charAt(0).toUpperCase() + data.tipoEdicion.split('_')[1].slice(1) ] || data.tipoEdicion],
-                    [t.pdfEstDuration, `${data.duracionFinal} min.`],
-                    [t.pdfDeliverables, t.pdfDeliverablesText.replace('{versions}', data.versionesAdicionales)],
-                    [t.pdfMotion, data.motionGraphics ? t.pdfMotionYes.replace('{complexity}', t['section3Motion' + data.complejidadMotion.charAt(0).toUpperCase() + data.complejidadMotion.slice(1)]) : t.pdfMotionNo],
-                    [t.pdfRevisions, t.pdfRevisionsText.replace('{revisions}', data.rondasRevision)],
-                ];
-            }
-            doc.autoTable({ head, body: tableBody, startY: y, theme: 'grid', headStyles: { fillColor: [22, 160, 133] } });
-            y = doc.autoTable.previous.finalY + 15;
+                 const features = [];
+                 if(document.getElementById('paquete_graficos').checked) features.push(t.featureGraphics);
+                 if(document.getElementById('paquete_color').checked) features.push(t.featureColor);
+                 if(document.getElementById('paquete_musica').checked) features.push(t.featureMusic);
+                 if(document.getElementById('paquete_formatos').checked) features.push(t.featureFormats);
 
-            // SECCIÓN DE INVERSIÓN
-            doc.setFontSize(14); doc.setFont('helvetica', 'bold'); doc.text(t.pdfInvestment, 15, y);
-            y += 7;
+                 bodyData = [
+                     [t.pdfProjectType, tipoProyectoTexto],
+                     [t.pdfFeatures, features.length > 0 ? features.join(', ') : t.pdfStdEditing]
+                 ];
+                 if(budgetData.tipoProyecto === 'cursos'){
+                     bodyData.push([t.packageTotalDuration, `${document.getElementById('duracionFinalCursos').value} min`]);
+                 }
+            }
+
+            doc.autoTable({
+                startY: 95,
+                head: [[t.pdfScope]],
+                body: bodyData,
+                headStyles: { fillColor: [59, 130, 246] }, // --primary-color
+                columnStyles: { 0: { fontStyle: 'bold' } }
+            });
+            let finalY = doc.lastAutoTable.finalY + 15;
+
+            // Tabla de Inversión
+            let investmentData = [];
+            if(budgetData.acuerdoMensual){
+                investmentData.push([t.pdfSubtotal, `${budgetData.subtotal.toFixed(2)} ${budgetData.moneda}`]);
+                investmentData.push([t.pdfDiscount, `-${budgetData.descuento.toFixed(2)} ${budgetData.moneda}`]);
+            }
+             investmentData.push([t.pdfFinalTotal, `${budgetData.totalFinal.toFixed(2)} ${budgetData.moneda}`]);
+
+            doc.autoTable({
+                startY: finalY,
+                head: [[t.pdfInvestment]],
+                body: investmentData,
+                headStyles: { fillColor: [59, 130, 246] },
+                bodyStyles: { hAlign: 'right' },
+                columnStyles: { 0: { fontStyle: 'bold', hAlign: 'left' }, 1: { fontStyle: 'bold' } }
+            });
+            finalY = doc.lastAutoTable.finalY + 15;
+
+            // Términos y Próximos Pasos
+            doc.setFontSize(14).setTextColor(31, 41, 55).text(t.pdfTerms, 20, finalY);
+            finalY += 8;
+            doc.setFontSize(10).setTextColor(107, 114, 128)
+                .text(`• ${t.pdfTerm1}`, 22, finalY)
+                .text(`• ${t.pdfTerm2}`, 22, finalY += 5)
+                .text(`• ${t.pdfTerm3}`, 22, finalY += 5)
+                .text(`• ${t.pdfTerm4}`, 22, finalY += 5);
+            finalY += 12;
             
             doc.autoTable({
-                startY: y, theme: 'plain', styles: { fontSize: 11, cellPadding: 2 },
+                startY: finalY,
                 body: [
-                    [t.pdfSubtotal, `${data.subtotal.toLocaleString(locale, { style: 'currency', currency: data.moneda })}`],
-                    ...(data.descuentoAplicado > 0 ? [[t.pdfDiscount, `-${data.descuentoAplicado.toLocaleString(locale, { style: 'currency', currency: data.moneda })}`]] : []),
-                    [t.pdfFinalTotal, `${data.precio.toLocaleString(locale, { style: 'currency', currency: data.moneda })}`],
+                    [t.pdfStep1Title, t.pdfStep2Title, t.pdfStep3Title],
+                    [t.pdfStep1Desc, t.pdfStep2Desc, t.pdfStep3Desc]
                 ],
-                columnStyles: { 0: { fontStyle: 'normal' }, 1: { fontStyle: 'bold', halign: 'right' } },
-                didDrawCell: (hookData) => {
-                    if (hookData.row.index === hookData.table.body.length - 1) {
-                        doc.setDrawColor(22, 160, 133); doc.setLineWidth(0.5);
-                        doc.line(hookData.cell.x, hookData.cell.y + hookData.cell.height + 1, hookData.cell.x + hookData.cell.width, hookData.cell.y + hookData.cell.height + 1);
-                    }
-                    if (hookData.row.section === 'body' && data.descuentoAplicado > 0 && hookData.row.index === 1) { doc.setTextColor(220, 53, 69); }
-                },
-                didParseCell: () => { doc.setTextColor(0,0,0); }
-            });
-            y = doc.autoTable.previous.finalY + 15;
-            
-            // TÉRMINOS Y PRÓXIMOS PASOS
-            doc.setFontSize(12); doc.setFont('helvetica', 'bold'); doc.text(t.pdfTerms, 15, y);
-            y += 6;
-            doc.setFontSize(9); doc.setFont('helvetica', 'normal');
-            [t.pdfTerm1, t.pdfTerm2, t.pdfTerm3, t.pdfTerm4].forEach(term => { doc.text(`• ${term}`, 15, y, { maxWidth: 95 }); y += 10; });
-
-            const nextSteps = [
-                { title: t.pdfStep1Title, desc: t.pdfStep1Desc },
-                { title: t.pdfStep2Title, desc: t.pdfStep2Desc },
-                { title: t.pdfStep3Title, desc: t.pdfStep3Desc }
-            ];
-            let x = 115;
-            y = doc.autoTable.previous.finalY + 21;
-            nextSteps.forEach(step => {
-                doc.setFont('helvetica', 'bold'); doc.text(step.title, x, y);
-                doc.setFont('helvetica', 'normal'); doc.text(step.desc, x, y + 4, { maxWidth: 85 });
-                y += 12;
+                styles: { fontSize: 9, cellPadding: 3 },
+                headStyles: { fontStyle: 'bold', fillColor: [243, 244, 246], textColor: [55, 65, 81] },
+                bodyStyles: {textColor: [107, 114, 128] }
             });
 
-            // PIE DE PÁGINA
+            // Footer
             const pageCount = doc.internal.getNumberOfPages();
-            for(let i = 1; i <= pageCount; i++) {
-                doc.setPage(i); doc.setFontSize(8); doc.setTextColor(150);
-                doc.setLineWidth(0.2); doc.line(15, 285, 195, 285);
-                doc.text(t.pdfFooter, 105, 290, null, null, 'center');
-            }
-            
-            const safeFileName = (data.nombreCliente || 'project').replace(/[\s\/]/g, '_');
-            doc.save(`Proposal_LupaEditions_${safeFileName}.pdf`);
-        }
-
-        // --- FUNCIONES Y EVENTOS INICIALES (NO MODIFICAR) ---
-        function calcularHoras(data) {
-            const desglose = {};
-            let totalHoras = 0;
-            let horasClasificacion = data.duracionBruto * 0.15;
-            if (data.organizacionMaterial === 'desorganizado') { horasClasificacion *= 1.5; }
-            desglose['Clasificación de Material'] = horasClasificacion;
-            totalHoras += horasClasificacion;
-
-            let horasEdicion = data.duracionFinal * 1.5;
-            const multEdicion = { 'rapida_redes': 1.2, 'corporativa': 1.0, 'emocional': 1.6 };
-            horasEdicion *= multEdicion[data.tipoEdicion];
-            if (data.multicam) { horasEdicion *= 1.4; }
-            desglose['Edición Principal'] = horasEdicion;
-            totalHoras += horasEdicion;
-
-            if (data.motionGraphics) {
-                const horasPorComplejidad = { 'baja': 2.0, 'media': 5.0, 'alta': 10.0 };
-                const horasMotion = horasPorComplejidad[data.complejidadMotion] * (1 + (data.duracionFinal - 1) * 0.2);
-                desglose['Motion Graphics (AE)'] = horasMotion;
-                totalHoras += horasMotion;
+            for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                doc.setFontSize(8).setTextColor(156, 163, 175);
+                doc.text(t.pdfFooter, doc.internal.pageSize.width / 2, 290, { align: 'center' });
             }
 
-            let horasExtras = 0;
-            if (data.subtitulos === 'automaticos') horasExtras += data.duracionFinal * 0.1;
-            else if (data.subtitulos === 'personalizados') horasExtras += data.duracionFinal * 0.3;
-            if (data.busquedaMusica) horasExtras += 1;
-            if (data.voiceOver) horasExtras += 1.5;
-            if (data.disenoMiniatura) horasExtras += 1;
-            horasExtras += (horasEdicion * 0.25) * data.versionesAdicionales;
-            desglose['Post-Producción y Extras'] = horasExtras;
-            totalHoras += horasExtras;
-            
-            const horasRevision = totalHoras * 0.15 * data.rondasRevision;
-            desglose['Revisiones y Comunicación'] = horasRevision;
-            totalHoras += horasRevision;
-
-            const factoresUrgencia = { 'normal': 1.0, 'urgente': 1.25, 'muy_urgente': 1.5 };
-            const urgencyFactor = factoresUrgencia[data.plazoEntrega];
-            let urgencyText = "Normal";
-            if (urgencyFactor > 1.0) {
-                 totalHoras *= urgencyFactor;
-                 urgencyText = data.plazoEntrega.replace('_', ' ').charAt(0).toUpperCase() + data.plazoEntrega.replace('_', ' ').slice(1);
-            }
-
-            return { total: totalHoras, desglose: desglose, urgencyFactor: urgencyFactor, urgencyText: urgencyText };
-        }
-        allElements.tipoProyectoSelect.addEventListener('change', (e) => {
-            const tipo = e.target.value;
-            const esDetallado = tipo === 'detallado';
-            allElements.containerDetallado.classList.toggle('hidden', !esDetallado);
-            allElements.containerPorProyecto.classList.toggle('hidden', esDetallado);
-            allElements.containerDetallado.querySelectorAll('input, select, textarea').forEach(el => { if(el.hasAttribute('required')) el.required = esDetallado; });
-            document.getElementById('nombreClienteProyecto').required = !esDetallado;
-            document.getElementById('duracionFinalCursos').required = (tipo === 'cursos');
-            allElements.campoDuracionCursos.classList.toggle('hidden', tipo !== 'cursos');
-        });
-        allElements.motionGraphicsCheckbox.addEventListener('change', (e) => {
-            allElements.campoComplejidadMotion.classList.toggle('hidden', !e.target.checked);
-        });
+            // Guardar el PDF
+            doc.save(`Presupuesto Lupa Editions - ${clientName}.pdf`);
+        };
         
-        // Inicializar en español
-        setLanguage('es');
-        allElements.tipoProyectoSelect.dispatchEvent(new Event('change'));
+        // --- EVENT LISTENERS ---
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            calcularYMostrarPresupuesto();
+        });
+
+        btnGenerarPDF.addEventListener('click', generarPDF);
+        tipoProyecto.addEventListener('change', updateFormVisibility);
+        btnLangEs.addEventListener('click', () => setLanguage('es'));
+        btnLangEn.addEventListener('click', () => setLanguage('en'));
+
+        // --- INICIALIZACIÓN ---
+        updateFormVisibility();
+        setLanguage(currentLanguage);
     });
     </script>
 </body>
