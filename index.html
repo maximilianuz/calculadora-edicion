@@ -228,14 +228,23 @@
     
     <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // --- PARÁMETROS GLOBALES Y TRADUCCIONES ---
+        // --- PARÁMETROS GLOBALES Y DE CONTACTO ---
         const TARIFA_HORA_INTERNA = 40; 
         const DESCUENTO_MENSUAL = 0.15;
         let currentLanguage = 'es';
-        let budgetData = {}; // Variable para guardar los datos del presupuesto
+        let budgetData = {}; 
+        
+        // ===================================================================
+        // ==  ↓↓↓  AQUÍ PUEDES EDITAR TUS DATOS DE CONTACTO  ↓↓↓  ==
+        // ===================================================================
+        const CONTACT_EMAIL = "tuemail@ejemplo.com";
+        const CONTACT_WEBSITE = "www.tupagina.com";
+        // ===================================================================
 
         const translations = {
             es: {
+                // ... (Otras traducciones sin cambios) ...
+                pdfFooter: `Lupa Editions | Contacto: ${CONTACT_EMAIL} | ${CONTACT_WEBSITE}`,
                 pageTitle: "Lupa Editions | Calculadora de Presupuestos",
                 mainHeader: "Lupa Editions | Calculadora de Presupuestos",
                 subHeader: "Genera presupuestos profesionales y automáticos.",
@@ -343,9 +352,10 @@
                 pdfStep2Desc: "Realizar el pago del 50% para agendar el proyecto.",
                 pdfStep3Title: "3. Kickoff",
                 pdfStep3Desc: "Coordinaremos una reunión inicial para alinear detalles.",
-                pdfFooter: "Lupa Editions | Contacto: tuemail@ejemplo.com | www.tupagina.com",
             },
             en: {
+                // ... (Otras traducciones sin cambios) ...
+                pdfFooter: `Lupa Editions | Contact: ${CONTACT_EMAIL} | ${CONTACT_WEBSITE}`,
                 pageTitle: "Lupa Editions | Budget Calculator",
                 mainHeader: "Lupa Editions | Budget Calculator",
                 subHeader: "Generate professional and automatic quotes.",
@@ -453,7 +463,6 @@
                 pdfStep2Desc: "Make the 50% payment to schedule the project.",
                 pdfStep3Title: "3. Kickoff",
                 pdfStep3Desc: "We will coordinate an initial meeting to align details.",
-                pdfFooter: "Lupa Editions | Contact: youremail@example.com | www.yourpage.com",
             }
         };
 
@@ -471,7 +480,7 @@
         const btnLangEs = document.getElementById('btn-lang-es');
         const btnLangEn = document.getElementById('btn-lang-en');
         
-        // --- LÓGICA DE TRADUCCIÓN ---
+        // --- LÓGICA DE TRADUCCIÓN (SIN CAMBIOS) ---
         const setLanguage = (lang) => {
             currentLanguage = lang;
             document.documentElement.lang = lang;
@@ -492,7 +501,7 @@
             });
         };
 
-        // --- LÓGICA DE VISIBILIDAD DEL FORMULARIO ---
+        // --- LÓGICA DE VISIBILIDAD DEL FORMULARIO (SIN CAMBIOS) ---
         const updateFormVisibility = () => {
             const selectedType = tipoProyecto.value;
             if (selectedType === 'detallado') {
@@ -501,10 +510,8 @@
             } else {
                 containerDetallado.classList.add('hidden');
                 containerPorProyecto.classList.remove('hidden');
-                // Mostrar campo de duración solo para cursos
                 campoDuracionCursos.classList.toggle('hidden', selectedType !== 'cursos');
             }
-             // Recalcular si ya hay un resultado visible
             if (!resultadoContainer.classList.contains('hidden')) {
                 calcularYMostrarPresupuesto();
             }
@@ -514,7 +521,7 @@
             campoComplejidadMotion.classList.toggle('hidden', !motionGraphicsCheckbox.checked);
         });
 
-        // --- LÓGICA DE CÁLCULO DE PRESUPUESTO ---
+        // --- LÓGICA DE CÁLCULO DE PRESUPUESTO (SIN CAMBIOS) ---
         const calcularYMostrarPresupuesto = () => {
             let totalHoras = 0;
             let precioBase = 0;
@@ -523,7 +530,6 @@
             const moneda = document.getElementById('moneda').value || 'USD';
             const tipo = tipoProyecto.value;
             
-            // Recopilar datos comunes
             detalles.acuerdoMensual = document.getElementById('acuerdoMensual').checked;
             detalles.moneda = moneda;
             detalles.tipoProyecto = tipo;
@@ -532,29 +538,20 @@
                  document.getElementById('nombreClienteProyecto').value;
 
             if (tipo === 'detallado') {
-                // Lógica para Presupuesto Detallado
                 const duracionBruto = parseFloat(document.getElementById('duracionBruto').value) || 0;
                 const duracionFinal = parseFloat(document.getElementById('duracionFinal').value) || 0;
-                
-                // 1. Horas por clasificación y selección de material
-                let horasOrganizacion = duracionBruto / 10; // 6 mins por cada minuto de bruto
+                let horasOrganizacion = duracionBruto / 10;
                 if (document.getElementById('organizacionMaterial').value === 'organizado') {
-                    horasOrganizacion *= 0.5; // Mitad de tiempo si ya está organizado
+                    horasOrganizacion *= 0.5;
                 }
                 totalHoras += horasOrganizacion;
                 desglose.push(`Organización Material: ${horasOrganizacion.toFixed(1)}h`);
-
-                // 2. Horas por edición base
-                let horasEdicionBase = duracionFinal * 3; // 3 horas por cada minuto final de video
+                let horasEdicionBase = duracionFinal * 3;
                 totalHoras += horasEdicionBase;
                 desglose.push(`Edición Base: ${horasEdicionBase.toFixed(1)}h`);
-
-                // 3. Modificadores por complejidad de edición
                 const tipoEdicion = document.getElementById('tipoEdicion').value;
                 if (tipoEdicion === 'rapida_redes') totalHoras *= 1.3;
                 if (tipoEdicion === 'emocional') totalHoras *= 1.5;
-
-                // 4. Extras
                 if (document.getElementById('multicam').checked) totalHoras += 2;
                 if (document.getElementById('motionGraphics').checked) {
                     const complejidad = document.getElementById('complejidadMotion').value;
@@ -565,54 +562,34 @@
                 const subtitulos = document.getElementById('subtitulos').value;
                 if (subtitulos === 'automaticos') totalHoras += duracionFinal * 0.3;
                 if (subtitulos === 'personalizados') totalHoras += duracionFinal * 0.8;
-
                 if (document.getElementById('busquedaMusica').checked) totalHoras += 1;
                 if (document.getElementById('voiceOver').checked) totalHoras += 2;
                 if (document.getElementById('disenoMiniatura').checked) totalHoras += 1.5;
-
-                // 5. Versiones y revisiones
-                totalHoras += (parseFloat(document.getElementById('versionesAdicionales').value) || 0) * (totalHoras * 0.2); // 20% del tiempo total por versión extra
-                totalHoras += (parseFloat(document.getElementById('rondasRevision').value) || 0) * 0.75; // 45 mins por ronda de revisión
-
-                // 6. Urgencia
+                totalHoras += (parseFloat(document.getElementById('versionesAdicionales').value) || 0) * (totalHoras * 0.2);
+                totalHoras += (parseFloat(document.getElementById('rondasRevision').value) || 0) * 0.75;
                 const plazo = document.getElementById('plazoEntrega').value;
                 if (plazo === 'urgente') totalHoras *= 1.25;
                 if (plazo === 'muy_urgente') totalHoras *= 1.5;
-
                 precioBase = totalHoras * TARIFA_HORA_INTERNA;
-
             } else {
-                // Lógica para Paquetes Fijos
-                const preciosPaquetes = {
-                    reels: 150,
-                    corporativo: 600,
-                    cursos: 80, // Precio por minuto final
-                    motion: 500,
-                    vsl: 400
-                };
+                const preciosPaquetes = { reels: 150, corporativo: 600, cursos: 80, motion: 500, vsl: 400 };
                 precioBase = preciosPaquetes[tipo];
-                
                 if (tipo === 'cursos') {
                     const duracionCursos = parseFloat(document.getElementById('duracionFinalCursos').value) || 0;
                     precioBase *= duracionCursos;
                 }
-
-                // Ajustes por características adicionales
                 if (document.getElementById('paquete_graficos').checked) precioBase *= 1.25;
                 if (document.getElementById('paquete_color').checked) precioBase *= 1.3;
                 if (document.getElementById('paquete_musica').checked) precioBase += 50;
                 if (document.getElementById('paquete_formatos').checked) precioBase *= 1.3;
             }
             
-            // Aplicar descuento
             const subtotal = precioBase;
             const descuento = detalles.acuerdoMensual ? subtotal * DESCUENTO_MENSUAL : 0;
             const totalFinal = subtotal - descuento;
             
-            // Guardar datos para el PDF
             budgetData = { ...detalles, subtotal, descuento, totalFinal, totalHoras, desglose };
 
-            // Mostrar resultados
             let htmlResultado = ``;
             if (tipo === 'detallado') {
                 htmlResultado += `<p><strong>${translations[currentLanguage].resultsTimeBreakdown}:</strong></p><ul>`;
@@ -621,7 +598,6 @@
             } else {
                  htmlResultado += `<p><strong>${translations[currentLanguage].resultsBasePrice}:</strong> ${subtotal.toFixed(2)} ${moneda}</p>`;
             }
-
             htmlResultado += `<div id="resultado-total">`;
             if (detalles.acuerdoMensual) {
                 htmlResultado += `<p>${translations[currentLanguage].resultsSubtotal}: ${subtotal.toFixed(2)} ${moneda}</p>`;
@@ -629,15 +605,13 @@
             }
             htmlResultado += `<p><strong>${translations[currentLanguage].resultsFinalPrice}: ${totalFinal.toFixed(2)} ${moneda}</strong></p>`;
             htmlResultado += `</div>`;
-
             resultadoDiv.innerHTML = htmlResultado;
             resultadoContainer.classList.remove('hidden');
             btnGenerarPDF.disabled = false;
         };
 
-        // --- LÓGICA DE GENERACIÓN DE PDF ---
+        // --- LÓGICA DE GENERACIÓN DE PDF (CON CAMBIOS) ---
         const generarPDF = () => {
-            // Asegurarse de que las librerías están cargadas
             if (typeof window.jspdf === 'undefined' || typeof window.jspdf.jsPDF === 'undefined') {
                 alert('Error: La librería jsPDF no se ha cargado correctamente.');
                 return;
@@ -645,33 +619,42 @@
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
 
-            const t = translations[currentLanguage]; // Textos en el idioma actual
+            const t = translations[currentLanguage]; 
             const clientName = budgetData.nombreProyecto || 'N/A';
-            
-            // Añadir Logo
             const logo = document.getElementById('company-logo');
+            
+            // --- CAMBIO #1: LOGO CENTRADO ---
+            // Ancho del logo en el PDF
+            const logoWidth = 50;
+            // Calculamos la posición X para centrar el logo
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const xPosition = (pageWidth - logoWidth) / 2;
+
             if(logo.complete) {
-                doc.addImage(logo, 'JPEG', 15, 15, 50, 15);
+                // Usamos la nueva posición X calculada
+                doc.addImage(logo, 'JPEG', xPosition, 15, logoWidth, 15);
             }
 
-            // Cabecera
+            // Cabecera (ajustada para estar debajo del logo centrado)
             doc.setFontSize(22);
-            doc.setTextColor(31, 41, 55); // --header-color
-            doc.text(t.pdfTitle, 105, 25, { align: 'center' });
+            doc.setTextColor(31, 41, 55); 
+            doc.text(t.pdfTitle, 105, 40, { align: 'center' }); // Bajamos un poco el título
 
             doc.setFontSize(11);
-            doc.setTextColor(107, 114, 128); // --subtle-text
-            doc.text(`${t.pdfDate}: ${new Date().toLocaleDateString()}`, 20, 45);
-            doc.text(`${t.pdfClient}: ${clientName}`, 20, 52);
+            doc.setTextColor(107, 114, 128); 
+            doc.text(`${t.pdfDate}: ${new Date().toLocaleDateString()}`, 20, 55);
+            doc.text(`${t.pdfClient}: ${clientName}`, 20, 62);
+            
+            // --- FIN DEL CAMBIO #1 ---
 
             // Introducción
             doc.setFontSize(11);
-            doc.setTextColor(55, 65, 81); // --label-color
+            doc.setTextColor(55, 65, 81); 
             const introText = t.pdfIntro.replace('{clientName}', clientName);
             const introLines = doc.splitTextToSize(introText, 170);
-            doc.text(introLines, 20, 70);
+            doc.text(introLines, 20, 80); // Posición Y ajustada
 
-            // Tabla de Alcance del Proyecto
+            // El resto de la lógica de las tablas y el contenido no cambia...
             let bodyData = [];
             const tipoProyectoTexto = document.querySelector(`#tipoProyecto option[value="${budgetData.tipoProyecto}"]`).textContent;
             
@@ -686,7 +669,6 @@
                     const comp = document.querySelector(`#complejidadMotion option[value="${document.getElementById('complejidadMotion').value}"]`).textContent;
                     motionText = t.pdfMotionYes.replace('{complexity}', comp);
                 }
-
                 bodyData = [
                     [t.pdfProjectType, tipoProyectoTexto],
                     [t.pdfObjective, document.getElementById('objetivo').value || 'N/A'],
@@ -696,7 +678,6 @@
                     [t.pdfMotion, motionText],
                     [t.pdfRevisions, t.pdfRevisionsText.replace('{revisions}', rondas)]
                 ];
-
             } else {
                  const features = [];
                  if(document.getElementById('paquete_graficos').checked) features.push(t.featureGraphics);
@@ -712,24 +693,21 @@
                      bodyData.push([t.packageTotalDuration, `${document.getElementById('duracionFinalCursos').value} min`]);
                  }
             }
-
             doc.autoTable({
-                startY: 95,
+                startY: 100, // Posición Y ajustada
                 head: [[t.pdfScope]],
                 body: bodyData,
-                headStyles: { fillColor: [59, 130, 246] }, // --primary-color
+                headStyles: { fillColor: [59, 130, 246] }, 
                 columnStyles: { 0: { fontStyle: 'bold' } }
             });
             let finalY = doc.lastAutoTable.finalY + 15;
-
-            // Tabla de Inversión
+            
             let investmentData = [];
             if(budgetData.acuerdoMensual){
                 investmentData.push([t.pdfSubtotal, `${budgetData.subtotal.toFixed(2)} ${budgetData.moneda}`]);
                 investmentData.push([t.pdfDiscount, `-${budgetData.descuento.toFixed(2)} ${budgetData.moneda}`]);
             }
              investmentData.push([t.pdfFinalTotal, `${budgetData.totalFinal.toFixed(2)} ${budgetData.moneda}`]);
-
             doc.autoTable({
                 startY: finalY,
                 head: [[t.pdfInvestment]],
@@ -739,8 +717,7 @@
                 columnStyles: { 0: { fontStyle: 'bold', hAlign: 'left' }, 1: { fontStyle: 'bold' } }
             });
             finalY = doc.lastAutoTable.finalY + 15;
-
-            // Términos y Próximos Pasos
+            
             doc.setFontSize(14).setTextColor(31, 41, 55).text(t.pdfTerms, 20, finalY);
             finalY += 8;
             doc.setFontSize(10).setTextColor(107, 114, 128)
@@ -749,7 +726,6 @@
                 .text(`• ${t.pdfTerm3}`, 22, finalY += 5)
                 .text(`• ${t.pdfTerm4}`, 22, finalY += 5);
             finalY += 12;
-            
             doc.autoTable({
                 startY: finalY,
                 body: [
@@ -760,8 +736,8 @@
                 headStyles: { fontStyle: 'bold', fillColor: [243, 244, 246], textColor: [55, 65, 81] },
                 bodyStyles: {textColor: [107, 114, 128] }
             });
-
-            // Footer
+            
+            // Footer (sin cambios, ya usa las constantes)
             const pageCount = doc.internal.getNumberOfPages();
             for (let i = 1; i <= pageCount; i++) {
                 doc.setPage(i);
@@ -769,11 +745,10 @@
                 doc.text(t.pdfFooter, doc.internal.pageSize.width / 2, 290, { align: 'center' });
             }
 
-            // Guardar el PDF
             doc.save(`Presupuesto Lupa Editions - ${clientName}.pdf`);
         };
         
-        // --- EVENT LISTENERS ---
+        // --- EVENT LISTENERS (SIN CAMBIOS) ---
         form.addEventListener('submit', (e) => {
             e.preventDefault();
             calcularYMostrarPresupuesto();
@@ -784,7 +759,7 @@
         btnLangEs.addEventListener('click', () => setLanguage('es'));
         btnLangEn.addEventListener('click', () => setLanguage('en'));
 
-        // --- INICIALIZACIÓN ---
+        // --- INICIALIZACIÓN (SIN CAMBIOS) ---
         updateFormVisibility();
         setLanguage(currentLanguage);
     });
