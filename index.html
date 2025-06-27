@@ -33,8 +33,8 @@
         label { font-weight: 600; display: block; margin: 1rem 0 0.5rem; color: var(--label-color); }
         input, select, textarea { width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; font-size: 1rem; background-color: var(--bg-color); color: var(--text-color); box-sizing: border-box; transition: border-color 0.3s, box-shadow 0.3s; }
         input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color) 25%, transparent); }
-        .input-group { display: flex; gap: 1rem; align-items: center; }
-        .input-group label { margin: 0; }
+        .input-group { display: flex; gap: 1rem; align-items: center; margin-top: 1rem; }
+        .input-group label { margin: 0; font-weight: normal; }
         .input-group input[type="checkbox"] { width: auto; }
         .button-group { display: flex; gap: 1rem; margin-top: 1.5rem; }
         button { background-color: var(--primary-color); color: white; border: none; border-radius: 8px; padding: 0.8rem 1.5rem; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background-color 0.2s ease, transform 0.1s ease; flex-grow: 1; }
@@ -63,10 +63,10 @@
     <header>
         <img id="company-logo" src="https://i.postimg.cc/t7Tfd4Wy/LOGO-FINAL.jpg" alt="Lupa Editions Logo"/>
         <h1>Lupa Editions | Calculadora Híbrida</h1>
-        <p style="color:var(--subtle-text); font-style: italic;">Presupuestos por proyecto y por horas.</p>
+        <p style="color:var(--subtle-text); font-style: italic;">Presupuestos por paquete y por horas.</p>
     </header>
 
-    <form id="presupuestoForm" autocomplete="off">
+    <form id="presupuestoForm" autocomplete="off" novalidate>
         <fieldset>
             <legend>Tipo de Presupuesto</legend>
             <label for="tipoProyecto">Selecciona el modelo de cálculo</label>
@@ -90,13 +90,26 @@
                     <label for="duracionFinalCursos">Duración final total (minutos)</label>
                     <input type="number" id="duracionFinalCursos" min="1" value="10">
                 </div>
-
-                <label for="complejidadProyecto">Complejidad del Proyecto</label>
-                <select id="complejidadProyecto">
-                    <option value="baja">Baja (Edición simple, pocos cortes)</option>
-                    <option value="media" selected>Media (Gráficos, música, color básico)</option>
-                    <option value="alta">Alta (Motion graphics, efectos complejos)</option>
-                </select>
+            </fieldset>
+            <fieldset>
+                <legend>Características Adicionales</legend>
+                <p style="color:var(--subtle-text); font-size: 0.9rem; margin-top: -1rem; margin-bottom: 1rem;">Cada opción seleccionada ajustará el precio automáticamente.</p>
+                <div class="input-group">
+                    <input type="checkbox" id="paquete_graficos">
+                    <label for="paquete_graficos">Gráficos y Títulos Animados</label>
+                </div>
+                <div class="input-group">
+                    <input type="checkbox" id="paquete_color">
+                    <label for="paquete_color">Corrección de Color Avanzada</label>
+                </div>
+                 <div class="input-group">
+                    <input type="checkbox" id="paquete_musica">
+                    <label for="paquete_musica">Búsqueda de Música de Librería</label>
+                </div>
+                <div class="input-group">
+                    <input type="checkbox" id="paquete_formatos">
+                    <label for="paquete_formatos">Múltiples Formatos (ej. vertical y horizontal)</label>
+                </div>
             </fieldset>
         </div>
 
@@ -183,16 +196,18 @@
                  <label for="rondasRevision">Rondas de cambios incluidas</label>
                 <input type="number"id="rondasRevision" min="0" value="2">
             </fieldset>
-            
-            <fieldset>
-                <legend>💵 6. Parámetros de Costo</legend>
-                <label for="tarifaHora">Tu Tarifa por Hora</label>
-                <input type="number" id="tarifaHora" min="1" value="40" required>
-                 <label for="moneda">Moneda del Presupuesto</label>
-                 <input type="text" id="moneda" value="USD" placeholder="Ej: USD, ARS, EUR" required>
-            </fieldset>
         </div>
         
+        <fieldset>
+             <legend>💵 Parámetros de Costo</legend>
+             <div id="campo-tarifa-hora">
+                <label for="tarifaHora">Tu Tarifa por Hora</label>
+                <input type="number" id="tarifaHora" min="1" value="40">
+             </div>
+             <label for="moneda">Moneda del Presupuesto</label>
+             <input type="text" id="moneda" value="USD" placeholder="Ej: USD, ARS, EUR" required>
+        </fieldset>
+
         <div class="button-group">
             <button type="submit">Calcular Presupuesto</button>
             <button type="button" id="btnGenerarPDF" disabled>Generar PDF para Cliente</button>
@@ -212,11 +227,11 @@
         const containerDetallado = document.getElementById('container-detallado');
         const containerPorProyecto = document.getElementById('container-por-proyecto');
         const campoDuracionCursos = document.getElementById('campo-duracion-cursos');
+        const campoTarifaHora = document.getElementById('campo-tarifa-hora');
         const resultadoContainer = document.getElementById('resultado-container');
         const resultadoDiv = document.getElementById('resultado');
         const btnGenerarPDF = document.getElementById('btnGenerarPDF');
         
-        // --- CAMPOS DINÁMICOS ---
         const motionGraphicsCheckbox = document.getElementById('motionGraphics');
         const campoComplejidadMotion = document.getElementById('campo-complejidad-motion');
 
@@ -238,21 +253,16 @@
 
             containerDetallado.classList.toggle('hidden', !esDetallado);
             containerPorProyecto.classList.toggle('hidden', esDetallado);
+            campoTarifaHora.classList.toggle('hidden', !esDetallado);
 
-            // Habilitar/deshabilitar campos 'required' para evitar errores de validación en formularios ocultos
+            // SOLUCIÓN AL BUG: Alternar qué campos son requeridos
             containerDetallado.querySelectorAll('input, select, textarea').forEach(el => el.required = esDetallado);
             document.getElementById('nombreClienteProyecto').required = !esDetallado;
-
-
-            campoDuracionCursos.classList.toggle('hidden', tipo !== 'cursos');
+            document.getElementById('tarifaHora').required = esDetallado;
             
-            // Forzar el estado inicial requerido
-             document.getElementById('nombreClienteDetallado').required = true;
-             document.getElementById('duracionBruto').required = true;
-             document.getElementById('duracionFinal').required = true;
-             document.getElementById('tarifaHora').required = true;
-             document.getElementById('moneda').required = true;
-
+            // Caso especial: El campo de duración de cursos solo es requerido si esa opción está visible
+            document.getElementById('duracionFinalCursos').required = (tipo === 'cursos');
+            campoDuracionCursos.classList.toggle('hidden', tipo !== 'cursos');
         });
 
         motionGraphicsCheckbox.addEventListener('change', (e) => {
@@ -264,9 +274,6 @@
             const desglose = {};
             let totalHoras = 0;
 
-            // 1. Clasificación y selección de material
-            // Se estima un 15% del tiempo del material bruto para visionado y clasificación.
-            // Si está desorganizado, se añade un 50% extra a esa tarea.
             let horasClasificacion = data.duracionBruto * 0.15;
             if (data.organizacionMaterial === 'desorganizado') {
                 horasClasificacion *= 1.5;
@@ -274,63 +281,38 @@
             desglose['Clasificación y Selección de Material'] = horasClasificacion;
             totalHoras += horasClasificacion;
 
-            // 2. Edición base y estructura
-            // La base es 1.5 horas por cada minuto de video final.
             let horasEdicion = data.duracionFinal * 1.5;
-            const multiplicadoresEdicion = {
-                'rapida_redes': 1.2,
-                'corporativa': 1.0,
-                'emocional': 1.6
-            };
+            const multiplicadoresEdicion = { 'rapida_redes': 1.2, 'corporativa': 1.0, 'emocional': 1.6 };
             horasEdicion *= multiplicadoresEdicion[data.tipoEdicion];
              if (data.multicam) {
-                horasEdicion *= 1.4; // Multicamara añade un 40% al tiempo de edición
+                horasEdicion *= 1.4;
             }
             desglose['Edición Principal y Estructura'] = horasEdicion;
             totalHoras += horasEdicion;
 
-            // 3. Motion Graphics y Efectos (After Effects)
             if (data.motionGraphics) {
-                const horasPorComplejidad = {
-                    'baja': 2.0,  // Títulos, zócalos
-                    'media': 5.0, // Logo animado, transiciones
-                    'alta': 10.0  // Escena animada, VFX
-                };
-                const horasMotion = horasPorComplejidad[data.complejidadMotion] * (1 + (data.duracionFinal -1) * 0.2); // Escala un poco con la duración
+                const horasPorComplejidad = { 'baja': 2.0, 'media': 5.0, 'alta': 10.0 };
+                const horasMotion = horasPorComplejidad[data.complejidadMotion] * (1 + (data.duracionFinal - 1) * 0.2);
                 desglose['Motion Graphics (AE)'] = horasMotion;
                 totalHoras += horasMotion;
             }
 
-            // 4. Extras y post-producción
             let horasExtras = 0;
-            if (data.subtitulos === 'automaticos') {
-                horasExtras += data.duracionFinal * 0.1; // 6 min por minuto de video
-            } else if (data.subtitulos === 'personalizados') {
-                 horasExtras += data.duracionFinal * 0.3; // 18 min por minuto de video
-            }
-            if (data.busquedaMusica) horasExtras += 1; // 1h fija para búsqueda/licencia
-            if (data.voiceOver) horasExtras += 1.5; // 1.5h fijas para grabación/limpieza básica
-            if (data.disenoMiniatura) horasExtras += 1; // 1h fija para diseño
+            if (data.subtitulos === 'automaticos') horasExtras += data.duracionFinal * 0.1;
+            else if (data.subtitulos === 'personalizados') horasExtras += data.duracionFinal * 0.3;
+            if (data.busquedaMusica) horasExtras += 1;
+            if (data.voiceOver) horasExtras += 1.5;
+            if (data.disenoMiniatura) horasExtras += 1;
             
-            // Versiones adicionales (ej. formato vertical)
-            // Se estima un 25% del tiempo de edición por cada versión extra.
             horasExtras += (horasEdicion * 0.25) * data.versionesAdicionales;
-
             desglose['Post-Producción y Extras'] = horasExtras;
             totalHoras += horasExtras;
             
-            // 5. Revisiones y Comunicación
-            // Cada ronda de revisión se estima en un 15% del total acumulado.
             const horasRevision = totalHoras * 0.15 * data.rondasRevision;
             desglose['Rondas de Revisión y Comunicación'] = horasRevision;
             totalHoras += horasRevision;
 
-            // 6. Factor de Urgencia
-            const factoresUrgencia = {
-                'normal': 1.0,
-                'urgente': 1.25,
-                'muy_urgente': 1.5
-            };
+            const factoresUrgencia = { 'normal': 1.0, 'urgente': 1.25, 'muy_urgente': 1.5 };
             const urgencyFactor = factoresUrgencia[data.plazoEntrega];
             let urgencyText = "Normal";
             if (urgencyFactor > 1.0) {
@@ -338,90 +320,87 @@
                  urgencyText = data.plazoEntrega.replace('_', ' ').charAt(0).toUpperCase() + data.plazoEntrega.replace('_', ' ').slice(1);
             }
 
-            return {
-                total: totalHoras,
-                desglose: desglose,
-                urgencyFactor: urgencyFactor,
-                urgencyText: urgencyText
-            };
+            return { total: totalHoras, desglose: desglose, urgencyFactor: urgencyFactor, urgencyText: urgencyText };
         }
 
         // --- LÓGICA DE CÁLCULO (EVENTO SUBMIT) ---
         form.addEventListener('submit', (e) => {
             e.preventDefault();
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
             const tipoProyecto = tipoProyectoSelect.value;
-            let moneda = "";
+            const moneda = document.getElementById('moneda').value;
             let precioFinal = 0;
             let resultadoHTML = '';
             
-            // --- MODELO DE PRECIOS POR PAQUETE ---
+            // --- MODELO DE PRECIOS POR PAQUETE (AUTOMÁTICO) ---
             if (tipoProyecto !== 'detallado') {
-                moneda = document.getElementById('moneda').value;
                 const proyecto = preciosPorProyecto[tipoProyecto];
-                const complejidad = document.getElementById('complejidadProyecto').value;
                 const nombreCliente = document.getElementById('nombreClienteProyecto').value;
+                const precioBase = proyecto.min;
+                const rangoDePrecio = proyecto.max - proyecto.min;
 
-                let precioBase;
-                if (complejidad === 'baja') {
-                    precioBase = proyecto.min;
-                } else if (complejidad === 'alta') {
-                    precioBase = proyecto.max;
-                } else { // media
-                    precioBase = (proyecto.min + proyecto.max) / 2;
-                }
+                const features = {
+                    "Gráficos y Títulos Animados": document.getElementById('paquete_graficos').checked,
+                    "Corrección de Color Avanzada": document.getElementById('paquete_color').checked,
+                    "Búsqueda de Música de Librería": document.getElementById('paquete_musica').checked,
+                    "Múltiples Formatos": document.getElementById('paquete_formatos').checked
+                };
 
+                const featuresSeleccionadas = Object.keys(features).filter(f => features[f]);
+                const numTotalFeatures = Object.keys(features).length;
+                const precioPorFeature = rangoDePrecio / numTotalFeatures;
+
+                const costoAdicional = precioPorFeature * featuresSeleccionadas.length;
+                precioFinal = precioBase + costoAdicional;
+                
                 if (tipoProyecto === 'cursos') {
                     const duracion = Number(document.getElementById('duracionFinalCursos').value);
-                    precioFinal = precioBase * duracion;
-                    resultadoHTML = `
-                        <h3>${proyecto.nombre}</h3>
-                        <p><strong>Precio base por minuto (Complejidad ${complejidad}):</strong> ${precioBase.toFixed(2)} ${moneda}</p>
-                        <p><strong>Duración total:</strong> ${duracion} minutos</p>
-                    `;
-                } else {
-                    precioFinal = precioBase;
-                    resultadoHTML = `
-                        <h3>${proyecto.nombre}</h3>
-                        <p><strong>Rango de referencia:</strong> ${proyecto.min} - ${proyecto.max} ${moneda}</p>
-                        <p><strong>Complejidad seleccionada:</strong> ${complejidad}</p>
-                    `;
+                    precioFinal *= duracion;
+                }
+                
+                resultadoHTML = `<h3>${proyecto.nombre}</h3>
+                    <p><strong>Precio Base:</strong> ${precioBase.toLocaleString('es-AR', { style: 'currency', currency: moneda })}</p>`;
+
+                if (featuresSeleccionadas.length > 0) {
+                     resultadoHTML += `<p><strong>Características Adicionales:</strong></p><ul>`;
+                     featuresSeleccionadas.forEach(f => {
+                         resultadoHTML += `<li>${f}</li>`;
+                     });
+                     resultadoHTML += `</ul>`;
                 }
                 
                 currentQuoteData = {
                     modelo: 'proyecto',
                     nombreCliente: nombreCliente,
                     tipoProyectoNombre: proyecto.nombre,
-                    complejidad: complejidad,
                     precio: precioFinal,
                     moneda: moneda,
+                    features: featuresSeleccionadas
                 };
 
             // --- MODELO DE PRECIOS DETALLADO (POR HORAS) ---
             } else {
-                moneda = document.getElementById('moneda').value;
                 const data = {
-                    // Contexto
                     nombreCliente: document.getElementById('nombreClienteDetallado').value,
                     objetivo: document.getElementById('objetivo').value,
-                    // Material
                     duracionBruto: Number(document.getElementById('duracionBruto').value),
                     organizacionMaterial: document.getElementById('organizacionMaterial').value,
-                    // Edición
                     tipoEdicion: document.getElementById('tipoEdicion').value,
                     multicam: document.getElementById('multicam').checked,
                     motionGraphics: document.getElementById('motionGraphics').checked,
                     complejidadMotion: document.getElementById('complejidadMotion').value,
-                    // Extras
                     subtitulos: document.getElementById('subtitulos').value,
                     busquedaMusica: document.getElementById('busquedaMusica').checked,
                     voiceOver: document.getElementById('voiceOver').checked,
                     disenoMiniatura: document.getElementById('disenoMiniatura').checked,
-                    // Entregables
                     duracionFinal: Number(document.getElementById('duracionFinal').value),
                     versionesAdicionales: Number(document.getElementById('versionesAdicionales').value),
                     plazoEntrega: document.getElementById('plazoEntrega').value,
                     rondasRevision: Number(document.getElementById('rondasRevision').value),
-                    // Costo
                     tarifaHora: Number(document.getElementById('tarifaHora').value),
                     moneda: moneda
                 };
@@ -475,8 +454,6 @@
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
 
-            // --- CABECERA ---
-            // Intenta añadir el logo. Si falla, continúa sin él.
             try {
                 const imgData = document.getElementById('company-logo').src;
                 doc.addImage(imgData, 'JPEG', 15, 10, 50, 0);
@@ -493,22 +470,19 @@
             doc.text(`Fecha: ${new Date().toLocaleDateString('es-ES')}`, 200, 26, null, null, 'right');
             doc.text(`Cliente: ${data.nombreCliente || 'A confirmar'}`, 200, 32, null, null, 'right');
             
-            // --- TÍTULO ---
             let y = 55;
             doc.setFontSize(16);
             doc.setFont('helvetica', 'bold');
             doc.text("Resumen del Proyecto y Alcance", 105, y, null, null, 'center');
             y += 10;
             
-            // --- TABLA DE DETALLES ---
             let tableBody = [];
             const head = [['Concepto', 'Detalle']];
 
             if (data.modelo === 'proyecto') {
                 tableBody = [
                     ['Tipo de Proyecto', data.tipoProyectoNombre],
-                    ['Complejidad Estimada', data.complejidad.charAt(0).toUpperCase() + data.complejidad.slice(1)],
-                    ['Entregable', `Un video finalizado según las características del tipo de proyecto.`],
+                    ['Características Incluidas', data.features.length > 0 ? doc.splitTextToSize(data.features.join(', '), 120) : 'Edición estándar'],
                 ];
             } else { // Modelo detallado
                  tableBody = [
@@ -524,58 +498,38 @@
             }
 
             doc.autoTable({
-                head: head,
-                body: tableBody,
-                startY: y,
-                theme: 'grid',
+                head: head, body: tableBody, startY: y, theme: 'grid',
                 headStyles: { fillColor: [22, 160, 133] },
-                didDrawPage: (hookData) => { y = hookData.cursor.y; } // Actualiza la posición 'y'
+                didDrawPage: (hookData) => { y = hookData.cursor.y; }
             });
             
             y = doc.autoTable.previous.finalY + 20;
 
-            // --- SECCIÓN DE INVERSIÓN ---
-            doc.setFontSize(16);
-            doc.setFont('helvetica', 'bold');
-            doc.text("Inversión del Proyecto", 15, y);
+            doc.setFontSize(16); doc.setFont('helvetica', 'bold'); doc.text("Inversión del Proyecto", 15, y);
             y += 8;
-
-            doc.setFontSize(22);
-            doc.setTextColor(var(--primary-color));
-            doc.text(`${data.precio.toLocaleString('es-AR', { style: 'currency', currency: data.moneda, minimumFractionDigits: 2})}`, 15, y);
+            doc.setFontSize(22); doc.setTextColor('#3b82f6'); doc.text(`${data.precio.toLocaleString('es-AR', { style: 'currency', currency: data.moneda, minimumFractionDigits: 2})}`, 15, y);
             y += 8;
             
-            doc.setFontSize(10);
-            doc.setFont('helvetica', 'normal');
-            doc.setTextColor(100);
+            doc.setFontSize(10); doc.setFont('helvetica', 'normal'); doc.setTextColor(100);
             if (data.modelo === 'detallado') {
                  doc.text(`Basado en una estimación de ${data.total.toFixed(1)} horas a una tarifa de ${data.tarifaHora.toFixed(2)} ${data.moneda}/hora.`, 15, y);
             } else {
-                 doc.text(`Precio final para el proyecto "${data.tipoProyectoNombre}".`, 15, y);
+                 doc.text(`Precio final para el proyecto "${data.tipoProyectoNombre}" con las características seleccionadas.`, 15, y);
             }
              y += 15;
 
-            // --- TÉRMINOS Y CONDICIONES ---
-            doc.setFontSize(12);
-            doc.setFont('helvetica', 'bold');
-            doc.setTextColor(0);
-            doc.text("Términos y Condiciones", 15, y);
+            doc.setFontSize(12); doc.setFont('helvetica', 'bold'); doc.setTextColor(0); doc.text("Términos y Condiciones", 15, y);
             y += 6;
 
-            doc.setFontSize(9);
-            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(9); doc.setFont('helvetica', 'normal');
             const terms = [
                 'Este presupuesto es una estimación y puede variar si los requisitos del proyecto cambian significativamente.',
                 'Forma de pago: 50% por adelantado para iniciar el trabajo y 50% a la entrega del video final.',
                 'El material adicional o rondas de revisión no contempladas se presupuestarán por separado.',
                 'La propuesta es válida por 30 días.'
             ];
-            terms.forEach(term => {
-                doc.text(`• ${term}`, 15, y);
-                y += 5;
-            });
+            terms.forEach(term => { doc.text(`• ${term}`, 15, y); y += 5; });
             
-            // --- PIE DE PÁGINA ---
             const pageCount = doc.internal.getNumberOfPages();
             for(let i = 1; i <= pageCount; i++) {
                 doc.setPage(i);
@@ -584,8 +538,7 @@
                 doc.text(`Lupa Editions | Presupuesto | Página ${i} de ${pageCount}`, 105, 290, null, null, 'center');
             }
             
-            // --- GUARDAR ARCHIVO ---
-            const safeFileName = data.nombreCliente.replace(/[\s\/]/g, '_') || 'proyecto';
+            const safeFileName = (data.nombreCliente || 'proyecto').replace(/[\s\/]/g, '_');
             doc.save(`Propuesta_LupaEditions_${safeFileName}.pdf`);
         }
         
